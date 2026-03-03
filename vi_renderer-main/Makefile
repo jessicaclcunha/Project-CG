@@ -1,5 +1,5 @@
 CXX      := g++ 
-CXXFLAGS := -std=c++11 -O3
+CXXFLAGS := -std=c++11 -O3 -isysroot $(shell xcrun --show-sdk-path) -I/Library/Developer/CommandLineTools/usr/include/c++/v1
 LDFLAGS  := 
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects

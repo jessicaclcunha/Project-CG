@@ -7,6 +7,7 @@
 
 #include "BuildScenes.hpp"
 #include "DiffuseTexture.hpp"
+#include "PhongBRDF.hpp"
 
 static int AddDiffuseMat (Scene& scene, RGB const color);
 static int AddMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, RGB const Kt, float const eta=1.f);
@@ -16,6 +17,18 @@ static void AddSphere (Scene& scene, Point const C, float const radius,
 static void AddTriangle (Scene& scene,
                         Point const v1, Point const v2, Point const v3,
                         int const mat_ndx);
+
+
+static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const ns) {
+    PhongBRDF *brdf = new PhongBRDF(ns);
+    
+    brdf->Ka = Ka;
+    brdf->Kd = Kd;
+    brdf->Ks = Ks;
+    brdf->Kt = RGB(0.f, 0.f, 0.f);
+    
+    return (scene.AddMaterial(brdf));
+}
 
 
 static int AddDiffuseMat (Scene& scene, RGB const color) {
@@ -659,5 +672,72 @@ void FisheyeTestScene(Scene& scene) {
     
     AmbientLight* al = new AmbientLight(RGB(0.1, 0.1, 0.1));
     scene.lights.push_back(al);
+    scene.numLights++;
+}
+
+
+void PhongTestScene(Scene& scene) {
+
+    // Material difuso puro (referência – sem especular)
+    int const diff_mat = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),   // Ka
+        RGB(0.6f,  0.2f,  0.2f),    // Kd  (vermelho acastanhado)
+        RGB(0.0f,  0.0f,  0.0f),    // Ks  = 0  → sem lóbulo
+        1.f);
+
+    // ns = 5  → lóbulo muito largo (quase difuso)
+    int const phong_rough = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.2f,  0.4f,  0.7f),    // Kd  azul
+        RGB(0.8f,  0.8f,  0.8f),    // Ks  branco
+        5.f);
+
+    // ns = 50 → plástico típico
+    int const phong_mid = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.2f,  0.6f,  0.2f),    // Kd  verde
+        RGB(0.8f,  0.8f,  0.8f),
+        50.f);
+
+    // ns = 500 → muito brilhante
+    int const phong_shiny = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f,  0.4f,  0.1f),    // Kd  laranja
+        RGB(0.9f,  0.9f,  0.9f),
+        500.f);
+
+    // --- geometria: 4 esferas em linha ---
+    //   z=0, espaçadas de 2 unidades em X
+    AddSphere(scene, Point(-3.f, 0.f, 0.f), 0.9f, diff_mat);     // difuso puro
+    AddSphere(scene, Point(-1.f, 0.f, 0.f), 0.9f, phong_rough);  // ns=5
+    AddSphere(scene, Point( 1.f, 0.f, 0.f), 0.9f, phong_mid);    // ns=50
+    AddSphere(scene, Point( 3.f, 0.f, 0.f), 0.9f, phong_shiny);  // ns=500
+
+    // --- plano de chão (2 triângulos) para ver sombras ---
+    AddTriangle(scene,
+        Point(-6.f, -1.f, -3.f),
+        Point( 6.f, -1.f, -3.f),
+        Point( 6.f, -1.f,  3.f),
+        diff_mat);
+    AddTriangle(scene,
+        Point(-6.f, -1.f, -3.f),
+        Point( 6.f, -1.f,  3.f),
+        Point(-6.f, -1.f,  3.f),
+        diff_mat);
+
+    // --- iluminação ---
+    //  Point light principal: acima e ligeiramente à frente
+    PointLight* key = new PointLight(RGB(20.f, 20.f, 20.f), Point(2.f, 4.f, -3.f));
+    scene.lights.push_back(key);
+    scene.numLights++;
+
+    //  Fill light mais fraco do lado oposto
+    PointLight* fill = new PointLight(RGB(8.f, 8.f, 10.f), Point(-4.f, 2.f, -2.f));
+    scene.lights.push_back(fill);
+    scene.numLights++;
+
+    //  Ambient mínimo
+    AmbientLight* ambient = new AmbientLight(RGB(0.2f, 0.2f, 0.2f));
+    scene.lights.push_back(ambient);
     scene.numLights++;
 }

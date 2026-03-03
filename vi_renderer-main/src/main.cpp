@@ -43,7 +43,8 @@ int main(int argc, const char * argv[]) {
     const int H = 640;
     img = new ImagePPM(W, H);
     
-    DLightChallenge(scene);
+    PhongTestScene(scene);        // Phong test: 4 esferas com ns=0,5,50,500
+    //DLightChallenge(scene);
     //CornellBox(scene);
     scene.printSummary();
     //MassiveSphereScene(scene, 10000);
@@ -52,9 +53,13 @@ int main(int argc, const char * argv[]) {
     scene.BuildBVH(); // documentar para não funcionar
     scene.BuildLightBVH(); // documentar para não funcionar
 
-    //  === Default View Point  ===
-    const Point Eye = {280, 265, -500}, At = {280, 260, 0};  
-    const Vector Up = {0, 1, 0};  
+    //  === Phong Test Scene View Point  ===
+    const Point Eye = {0, 1, -6}, At = {0, 0, 0};
+    const Vector Up = {0, 1, 0};
+
+    //  === Default View Point (Cornell Box / DLightChallenge)  ===
+    //const Point Eye = {280, 265, -500}, At = {280, 260, 0};  
+    //const Vector Up = {0, 1, 0};  
 
     // === Up View Point  ===
     //const Point Eye = {275, 500, 300}, At = {275, 100, 300};
@@ -86,7 +91,7 @@ int main(int argc, const char * argv[]) {
         fprintf(stdout, "Using ORTHOGRAPHIC camera (width=%.1f)\n", ortho_width);
         
     #else
-        const float fovH = 60.f;
+        const float fovH = 70.f;
         const float fovHrad = fovH*3.14f/180.f;
         const float deFocusRad = 0*3.14f/180.f;
         const float FocusDist = 1.;
@@ -103,11 +108,11 @@ int main(int argc, const char * argv[]) {
     /*   Standard */
     // create the shader
     //shd = new AmbientShader(&scene, RGB(0.1,0.1,0.8));
-    //shd = new WhittedShader(&scene, RGB(0.1,0.1,0.8));
+    shd = new WhittedShader(&scene, RGB(0.05f, 0.05f, 0.05f));  // Whitted: determinístico, ideal para testar Phong
     //shd = new DistributedShader(&scene, RGB(0.1,0.1,0.8));
-    shd = new PathTracing(&scene, RGB(0., 0., 0.2));
+    //shd = new PathTracing(&scene, RGB(0., 0., 0.2));
 
-    int const spp = 16;
+    int const spp = 4;      // spp=1 chega para Whitted (determinístico)
     bool const jitter = true;
 
     StandardRenderer myRender(cam, &scene, img, shd, spp, jitter);

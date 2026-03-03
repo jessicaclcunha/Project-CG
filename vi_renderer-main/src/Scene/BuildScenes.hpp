@@ -25,5 +25,6 @@ void DiffuseCornellBox (Scene& scene);
 void DLightChallenge (Scene& scene);
 void MassiveSphereScene(Scene& scene, int numSpheres);
 void FisheyeTestScene(Scene& scene);
+void PhongTestScene(Scene& scene);
 
 #endif /* BuildScenes_hpp */

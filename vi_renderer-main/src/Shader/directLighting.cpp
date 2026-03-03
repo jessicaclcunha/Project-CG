@@ -9,6 +9,7 @@
 #include "AmbientLight.hpp"
 #include "PointLight.hpp"
 #include "AreaLight.hpp"
+#include "PhongBRDF.hpp"
 
 static RGB direct_AmbientLight (AmbientLight * l, BRDF  *  f);
 static RGB direct_PointLight (PointLight  *  l, Scene *scene, Intersection isect, BRDF  *  f);
@@ -162,8 +163,9 @@ static RGB direct_AmbientLight (AmbientLight * l, BRDF * f) {
 
 static RGB direct_PointLight (PointLight* l, Scene *scene, Intersection isect, BRDF * f) {
     RGB color (0., 0., 0.);
+
+    // --- resolve Kd (com ou sem textura) ---
     RGB Kd;
-    
     if (f->textured) {
         DiffuseTexture * df = (DiffuseTexture *)f;
         Kd = df->GetKd(isect.TexCoord);
@@ -172,39 +174,61 @@ static RGB direct_PointLight (PointLight* l, Scene *scene, Intersection isect, B
         Kd = f->Kd;
     }
 
-    if (!Kd.isZero()) {
-        Point Lpos;
-        RGB L = l->Sample_L(NULL, &Lpos);
-        Vector Ldir=isect.p.vec2point(Lpos);
-        float Ldistance = Ldir.norm();
-        Ldir.normalize();
-        float cosL = Ldir.dot(isect.sn);
-        if (cosL>0) {
-            
-            Ray shadow = Ray(isect.p, Ldir, SHADOW);
-            shadow.pix_x = isect.pix_x;
-            shadow.pix_y = isect.pix_y;
-            
-            shadow.adjustOrigin(isect.gn);
-            
-            if (scene->visibility(shadow, Ldistance-EPSILON)) {
-                color += L * Kd * cosL;
-                if (Ldistance>0.f) color /= (Ldistance*Ldistance);
-            }
-        }
-    } // Kd is zero
+    // Só continuamos se houver contribuição difusa OU especular
+    bool hasDiffuse  = !Kd.isZero();
+    bool hasSpecular = !f->Ks.isZero();
+    if (!hasDiffuse && !hasSpecular) return color;
 
-    
-    return (color);
+    // --- geometria da luz ---
+    Point Lpos;
+    RGB L = l->Sample_L(NULL, &Lpos);
+    Vector Ldir = isect.p.vec2point(Lpos);
+    float Ldistance = Ldir.norm();
+    Ldir.normalize();
+
+    float cosL = Ldir.dot(isect.sn);
+    if (cosL <= 0.f) return color;           // luz atrás da superfície
+
+    // --- sombra ---
+    Ray shadow = Ray(isect.p, Ldir, SHADOW);
+    shadow.pix_x = isect.pix_x;
+    shadow.pix_y = isect.pix_y;
+    shadow.adjustOrigin(isect.gn);
+
+    if (!scene->visibility(shadow, Ldistance - EPSILON)) return color;
+
+    float invD2 = (Ldistance > 0.f) ? 1.f / (Ldistance * Ldistance) : 1.f;
+
+    // --- termo difuso ---
+    if (hasDiffuse) {
+        color += L * Kd * cosL * invD2;
+    }
+
+    // --- termo especular Phong ---
+    if (hasSpecular) {
+        // Tenta fazer cast para PhongBRDF para aceder a ns
+        PhongBRDF* phong = dynamic_cast<PhongBRDF*>(f);
+        float ns = phong ? phong->ns : 10.f;   // fallback razoável
+
+        // R = reflexão perfeita de Ldir em torno da normal
+        float NdotL = std::max(0.f, isect.sn.dot(Ldir));
+        Vector R = isect.sn * (2.f * NdotL) - Ldir;
+        R.normalize();
+
+        float RdotV = std::max(0.f, R.dot(isect.wo));
+        if (RdotV > 0.f) {
+            float normFactor = (ns + 2.f) / (2.f * (float)M_PI);
+            float phongTerm = normFactor * std::pow(RdotV, ns);
+            color += L * f->Ks * (phongTerm * cosL * invD2);
+        }
+    }
+
+    return color;
 }
 
 static RGB direct_AreaLight (AreaLight* l, Scene *scene, Intersection isect, BRDF* f, float *r) {
     RGB color (0., 0., 0.);
     RGB Kd;
-    float pdf, cosL, cosLN_l, Ldistance;
-    RGB L;
-    Point Lpos;
-    
     if (f->textured) {
         DiffuseTexture * df = (DiffuseTexture *)f;
         Kd = df->GetKd(isect.TexCoord);
@@ -213,33 +237,55 @@ static RGB direct_AreaLight (AreaLight* l, Scene *scene, Intersection isect, BRD
         Kd = f->Kd;
     }
 
-    pdf = 0.;
-    if (!Kd.isZero()) {
-        Point Lpos;
-        
-        L = l->Sample_L(r, &Lpos, pdf);
-        // the pdf computed above is just 1/Area
-        Vector Ldir=isect.p.vec2point(Lpos);
-        Ldistance = Ldir.norm();
-        Ldir.normalize();
-        cosL = Ldir.dot(isect.sn);
-        cosLN_l = -1.f * Ldir.dot(l->gem->normal);
-        if (cosL>1.e-4 && cosLN_l>1.e-4) {
-            
-            Ray shadow = Ray(isect.p, Ldir, SHADOW);
-            shadow.pix_x = isect.pix_x;
-            shadow.pix_y = isect.pix_y;
-            
-            shadow.adjustOrigin(isect.gn);
-            
-            if (scene->visibility(shadow, Ldistance-EPSILON)) {
-                color = L * Kd * cosL;
-                if (pdf >0.) color /= pdf;
-                if (Ldistance>0.f) color /= (Ldistance*Ldistance);
-                color *= cosLN_l;
-            }
+    bool hasDiffuse  = !Kd.isZero();
+    bool hasSpecular = !f->Ks.isZero();
+    if (!hasDiffuse && !hasSpecular) return color;
+
+    float pdf = 0.f;
+    Point Lpos;
+    RGB L = l->Sample_L(r, &Lpos, pdf);
+
+    Vector Ldir = isect.p.vec2point(Lpos);
+    float Ldistance = Ldir.norm();
+    Ldir.normalize();
+
+    float cosL    = Ldir.dot(isect.sn);
+    float cosLN_l = -1.f * Ldir.dot(l->gem->normal);
+
+    if (cosL <= 1.e-4f || cosLN_l <= 1.e-4f) return color;
+
+    Ray shadow = Ray(isect.p, Ldir, SHADOW);
+    shadow.pix_x = isect.pix_x;
+    shadow.pix_y = isect.pix_y;
+    shadow.adjustOrigin(isect.gn);
+
+    if (!scene->visibility(shadow, Ldistance - EPSILON)) return color;
+
+    float invD2 = (Ldistance > 0.f) ? 1.f / (Ldistance * Ldistance) : 1.f;
+    float geomFactor = cosL * cosLN_l * invD2;
+    float pdfInv = (pdf > 0.f) ? 1.f / pdf : 0.f;
+
+    // --- difuso ---
+    if (hasDiffuse) {
+        color += L * Kd * geomFactor * pdfInv;
+    }
+
+    // --- especular Phong ---
+    if (hasSpecular) {
+        PhongBRDF* phong = dynamic_cast<PhongBRDF*>(f);
+        float ns = phong ? phong->ns : 10.f;
+
+        float NdotL = std::max(0.f, isect.sn.dot(Ldir));
+        Vector R = isect.sn * (2.f * NdotL) - Ldir;
+        R.normalize();
+
+        float RdotV = std::max(0.f, R.dot(isect.wo));
+        if (RdotV > 0.f) {
+            float normFactor = (ns + 2.f) / (2.f * (float)M_PI);
+            float phongTerm = normFactor * std::pow(RdotV, ns);
+            color += L * f->Ks * (phongTerm * geomFactor * pdfInv);
         }
-    } // Kd is zero
-    
-    return (color);
+    }
+
+    return color;
 }
