@@ -2,9 +2,11 @@
 
 # Execution
 
-1. `make` to build the project.
+1. `make` to build the project
 1. `make run` to compute and display the image (requires a previous `make build`)
 1. `make display` to only display the image (requires a previous `make run`)
+1. `make view`       → renderiza + abre viewer com reference.ppm carregado
+1. `make view-only`  → abre viewer sem re-renderizar (útil para iterar nos shaders)
 
 # RMSE Evaluation
 

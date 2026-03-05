@@ -50,8 +50,11 @@ int main(int argc, const char * argv[]) {
     //MassiveSphereScene(scene, 10000);
 
     //  === BVH PARA RAYS, MATERIALS, ... E BVH EXLCUSIVO DE LUZES  ===
+    fprintf(stdout, "Building BVH...\n"); fflush(stdout);
     scene.BuildBVH(); // documentar para não funcionar
+    fprintf(stdout, "Building LightBVH...\n"); fflush(stdout);
     scene.BuildLightBVH(); // documentar para não funcionar
+    fprintf(stdout, "Setup done, starting render...\n"); fflush(stdout);
 
     //  === Phong Test Scene View Point  ===
     const Point Eye = {0, 1, -6}, At = {0, 0, 0};
