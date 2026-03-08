@@ -8,6 +8,8 @@
 #ifndef ImagePPM_hpp
 #define ImagePPM_hpp
 #include "image.hpp"
+//#include "ToneMap.hpp"
+//#include "Reinhard.hpp"
 
 class ImagePPM: public Image {
     char_pixel *imageToSave;
@@ -17,8 +19,7 @@ public:
     ImagePPM():Image() {}
     bool Save (std::string filename);
     bool Load (std::string filename);
-    
-    void ImgClamp (int const W, int const H, RGB *image, char_pixel *img2save, bool apply_tone_mapping = false);
+    void ImgClamp (int const W, int const H, RGB *image, char_pixel *img2save);
 };
 
 #endif /* ImagePPM_hpp */

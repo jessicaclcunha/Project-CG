@@ -17,7 +17,7 @@ public:
     Point C;
     float radius;
     float radiusSq;
-   // BB bb;      // sphere bounding box
+    BB bb;      // sphere bounding box
                 // this is min={0.,0.,0.} , max={0.,0.,0.} due to the Point constructor
     bool intersect (Ray r, Intersection *isect);
     

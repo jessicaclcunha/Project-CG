@@ -25,14 +25,16 @@ public:
     float eta;
     RGB Ka, Kd, Ks, Kt;
 
+    Vec2 curTexCoord;  // set by caller before invoking f() for textured materials
+
     BRDF () {textured=false;}
     ~BRDF () {}
-    // return the BRDF RGB value for a pair of (incident, scattering) directions : (wi,wo)
-    virtual RGB f (Vector wi, Vector wo, const BRDF_TYPES = BRDF_ALL) {return RGB();}
-    // return an outgoing direction wo and brdf RGB value for a given wi and probability pair prob[2]
-    virtual RGB Sample_f (Vector wi, float *prob, Vector *wo, const BRDF_TYPES = BRDF_ALL) {return RGB();}
-    // return the probability of sampling wo given wi
-    virtual float pdf(Vector wi, Vector wo, const BRDF_TYPES = BRDF_ALL) {return 0.;}
+    // return the BRDF RGB value for (incident, scattering) directions and surface normal N
+    virtual RGB f (Vector wi, Vector wo, Vector N, const BRDF_TYPES = BRDF_ALL) {return RGB();}
+    // return an outgoing direction wo and brdf RGB value for a given wi, normal N and probability
+    virtual RGB Sample_f (Vector wi, Vector N, float *prob, Vector *wo, const BRDF_TYPES = BRDF_ALL) {return RGB();}
+    // return the probability of sampling wo given wi and surface normal N
+    virtual float pdf(Vector wi, Vector wo, Vector N, const BRDF_TYPES = BRDF_ALL) {return 0.;}
 };
 
 #endif /* BRDF_hpp */

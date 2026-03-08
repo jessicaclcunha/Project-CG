@@ -8,24 +8,21 @@
 #include "ImagePPM.hpp"
 #include <iostream>
 #include <fstream>
+
+#include "Reinhard.hpp"
 #include "Box.hpp"
 #include "Median.hpp"
 
-void ImagePPM::ImgClamp (int const W, int const H, RGB *image, char_pixel *img2save, bool apply_tone_mapping) {
+void ImagePPM::ImgClamp (int const W, int const H, RGB *image, char_pixel *img2save) {
     
+    // Use a Post Filter ?
+    //Box F;
+    Median F;
     RGB * imageTM = new RGB[W*H];
-    
-    if (apply_tone_mapping) {
-        Median F;
-        for (int i = 0; i < W * H; i++) {
-            imageTM[i] = image[i];
-        }
-    } else {
-        // Sem tone mapping - apenas copia
-        for (int i = 0; i < W * H; i++) {
-            imageTM[i] = image[i];
-        }
-    }
+    //F.Filter(W, H, image, imageTM);
+    // Use a Tone Mapper ?
+    Reinhard TM;
+    TM.ToneMap(W, H, image, imageTM);
     
     // loop over each pixel in the image, clamp and convert to byte format
     for (int j = 0 ; j< H ; j++) {
@@ -39,15 +36,17 @@ void ImagePPM::ImgClamp (int const W, int const H, RGB *image, char_pixel *img2s
     delete [] imageTM;
 }
 
+
+// Details and code on PPM files available at:
+// https://www.scratchapixel.com/lessons/digital-imaging/simple-image-manipulations/reading-writing-images.html
+
 bool ImagePPM::Save (std::string filename) {
     if (W == 0 || H == 0) { fprintf(stderr, "Can't save an empty image\n"); return false; }
     
     // convert from float to {0,1,..., 255}
     imageToSave = new char_pixel[W*H];
 
-    // O tone mapping já foi aplicado no main.cpp
-    ImgClamp(W, H, imagePlane, imageToSave, false);  // false = sem tone mapping
-    
+    ImgClamp(W, H, imagePlane, imageToSave);
     std::ofstream ofs;
     try {
         ofs.open(filename, std::ios::binary);  //need to spec. binary mode for Windows users

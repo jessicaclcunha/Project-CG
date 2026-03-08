@@ -17,10 +17,15 @@ class Geometry {
 public:
     Geometry () {}
     ~Geometry () {}
-    virtual bool intersect (Ray r, Intersection *isect) { return false; }
     // return True if r intersects this geometric primitive
     // returns data about intersection on isect
-    virtual BB WorldBound() const { return bb; }
+    virtual bool intersect (Ray r, Intersection *isect) {
+        /*if (r.pix_x==320 && r.pix_y==240) {
+            fprintf (stderr, "Testing geometry intersection\n");
+            fflush(stderr);
+        }*/
+        return false;
+    }
     // geometric primitive bounding box
     BB bb;  // this is min={0.,0.,0.} , max={0.,0.,0.} due to the Point constructor
 };

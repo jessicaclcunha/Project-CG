@@ -21,7 +21,7 @@ public:
     Vec2 uv1, uv2, uv3;  // texture coordinates for each vertex
     Vector normal;           // geometric normal
     Vector edge1, edge2, edge3;
-    //BB bb;      // face bounding box
+    BB bb;      // face bounding box
                 // this is min={0.,0.,0.} , max={0.,0.,0.} due to the Point constructor
     bool intersect (Ray r, Intersection *isect);
     bool isInside(Point p);

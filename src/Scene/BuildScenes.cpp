@@ -7,28 +7,18 @@
 
 #include "BuildScenes.hpp"
 #include "DiffuseTexture.hpp"
-#include "PhongBRDF.hpp"
 
 static int AddDiffuseMat (Scene& scene, RGB const color);
 static int AddMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, RGB const Kt, float const eta=1.f);
 static int AddTextMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, RGB const Kt, float const eta=1.f);
+static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const ns);
+static int AddPhongTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const ns);
+static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0);
 static void AddSphere (Scene& scene, Point const C, float const radius,
                             int const mat_ndx);
 static void AddTriangle (Scene& scene,
                         Point const v1, Point const v2, Point const v3,
                         int const mat_ndx);
-
-
-static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const ns) {
-    PhongBRDF *brdf = new PhongBRDF(ns);
-    
-    brdf->Ka = Ka;
-    brdf->Kd = Kd;
-    brdf->Ks = Ks;
-    brdf->Kt = RGB(0.f, 0.f, 0.f);
-    
-    return (scene.AddMaterial(brdf));
-}
 
 
 static int AddDiffuseMat (Scene& scene, RGB const color) {
@@ -427,7 +417,7 @@ void DLightChallenge (Scene& scene) {
     AddTriangle(scene, Point(265.0, 0.0, 296.0), Point(423.0, 0.0, 247.0), Point(423.0, 330.0, 247.0), blue_mat);
     
   
-    for (int llz=-1 ; llz<2 ; llz++) { // 18 luzes
+    for (int llz=-1 ; llz<2 ; llz++) {
         for (int llx=-1 ; llx<2 ; llx++) {
             AreaLight *a1 = new AreaLight(RGB(5000.-(llx+llz)*2000.,5000. -(llx+llz)*2000.,5000.-(llx+llz)*2000.), Point(250.+llx*150, 545., 250.+llz*150), Point(300.+llx*150, 545., 250.+llz*150), Point(300.+llx*150, 545., 300.+llz*150), Vector (0.,-1.,0.));
             scene.lights.push_back(a1);
@@ -437,7 +427,7 @@ void DLightChallenge (Scene& scene) {
             scene.numLights++;
         }
     }
-    for (int lll=0 ; lll<2 ; lll++) { // 4 luzes
+    for (int lll=0 ; lll<2 ; lll++) {
         AreaLight *a1 = new AreaLight(RGB(15000.+lll*4000,15000.+lll*4000,15000.+lll*4000), Point(-10., 20.+250*lll, 459.3), Point(-10., 90.+250*lll, 459.3), Point(-90, 90.+250*lll, 459.3), Vector (0.,0.,1.));
             scene.lights.push_back(a1);
             scene.numLights++;
@@ -445,7 +435,7 @@ void DLightChallenge (Scene& scene) {
             scene.lights.push_back(a2);
             scene.numLights++;
     }
-    for (int lll=0 ; lll<2 ; lll++) { // 4 luzes
+    for (int lll=0 ; lll<2 ; lll++) {
         AreaLight *a1 = new AreaLight(RGB(2000.-lll*500,2000.-lll*500.,1000. -lll*500), Point(0.01, 20., 20.+lll*200.), Point(0.01, 20., 100.+lll*200.), Point(0.01, 30., 100.+lll*200.), Vector (1.,0.,0.));
             scene.lights.push_back(a1);
             scene.numLights++;
@@ -453,7 +443,7 @@ void DLightChallenge (Scene& scene) {
             scene.lights.push_back(a2);
             scene.numLights++;
     }
-    for (int lll=0 ; lll<4 ; lll++) { // 8 luzes
+    for (int lll=0 ; lll<4 ; lll++) {
         AreaLight *a1 = new AreaLight(RGB(2000.-lll*450,2000.-lll*450.,1000. -lll*300), Point(549.59, 20., 20.+lll*200.), Point(549.59, 20., 100.+lll*200.), Point(549.59, 30., 100.+lll*200.), Vector (-1.,0.,0.));
             scene.lights.push_back(a1);
             scene.numLights++;
@@ -461,7 +451,6 @@ void DLightChallenge (Scene& scene) {
             scene.lights.push_back(a2);
             scene.numLights++;
     }
-    // DAQUI PARA BAIXO TEMOS MAIS 4 LUZES
     { // blue block light
         AreaLight *a1 = new AreaLight(RGB(4000.,4000.0,10000.), Point(340.0, 0.01, 220.0), Point(340.0, 0.01, 230.0), Point(350.0, 0.01, 230.0), Vector (0.,1.,0.));
             scene.lights.push_back(a1);
@@ -478,11 +467,8 @@ void DLightChallenge (Scene& scene) {
             scene.lights.push_back(a2);
             scene.numLights++;
     }
-
-    // AO TODO SÃO 38 LUZES
     return ;
 }
-
 
 // Scene for testing defocus blur 5 triangles
 void DeFocusTriScene (Scene& scene) {
@@ -511,233 +497,129 @@ void DeFocusTriScene (Scene& scene) {
     return ;
 }
 
-void MassiveSphereScene(Scene& scene, int numSpheres) {
-    // Usar o padrão AddMat do código existente
-    int materialId = AddMat(scene, 
-        RGB(0.1f, 0.1f, 0.1f),  // Ka
-        RGB(0.7f, 0.7f, 0.7f),  // Kd
-        RGB(0.3f, 0.3f, 0.3f),  // Ks
-        RGB(0.0f, 0.0f, 0.0f),  // Kt
-        1.0f                     // eta
-    );
-    
-    // Distribuir esferas numa grelha 3D
-    int gridSize = (int)cbrt(numSpheres);
-    float spacing = 20.0f;
-    float radius = 8.0f;
-    
-    for (int x = 0; x < gridSize; x++) {
-        for (int y = 0; y < gridSize; y++) {
-            for (int z = 0; z < gridSize; z++) {
-                if (x * gridSize * gridSize + y * gridSize + z >= numSpheres) break;
-                
-                Point center = {
-                    x * spacing - (gridSize * spacing / 2.0f) + 280,
-                    y * spacing + 50,
-                    z * spacing - (gridSize * spacing / 2.0f) + 280
-                };
-                
-                AddSphere(scene, center, radius, materialId);
-            }
-        }
-    }
-    
-    // Adicionar luz como nas outras cenas
-    RGB white(10000., 10000., 10000.);
-    Point lp = {280, 400, 280};
-    PointLight* l1 = new PointLight(white, lp);
-    scene.lights.push_back(l1);
-    scene.numLights++;
-    
-    // Luz ambiente
-    AmbientLight* al = new AmbientLight(RGB(0.2, 0.2, 0.2));
-    scene.lights.push_back(al);
-    scene.numLights++;
+
+static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const ns) {
+    Phong *brdf = new Phong;
+    brdf->Ka = Ka;
+    brdf->Kd = Kd;
+    brdf->Ks = Ks;
+    brdf->Kt = RGB(0., 0., 0.);
+    brdf->ns = ns;
+    return (scene.AddMaterial(brdf));
 }
 
-void FisheyeTestScene(Scene& scene) {
-    // ===== MATERIAIS usando AddMat =====
-    int whiteMat = AddMat(scene, RGB(0.1f, 0.1f, 0.1f), RGB(0.9f, 0.9f, 0.9f), RGB(0.3f, 0.3f, 0.3f), RGB(0,0,0));
-    int blackMat = AddMat(scene, RGB(0.02f, 0.02f, 0.02f), RGB(0.1f, 0.1f, 0.1f), RGB(0.1f, 0.1f, 0.1f), RGB(0,0,0));
-    int redMat = AddMat(scene, RGB(0.1f, 0.01f, 0.01f), RGB(0.9f, 0.1f, 0.1f), RGB(0.3f, 0.1f, 0.1f), RGB(0,0,0));
-    int blueMat = AddMat(scene, RGB(0.01f, 0.01f, 0.1f), RGB(0.1f, 0.1f, 0.9f), RGB(0.1f, 0.1f, 0.3f), RGB(0,0,0));
-    int greenMat = AddMat(scene, RGB(0.01f, 0.1f, 0.01f), RGB(0.1f, 0.9f, 0.1f), RGB(0.1f, 0.3f, 0.1f), RGB(0,0,0));
-    int yellowMat = AddMat(scene, RGB(0.1f, 0.1f, 0.01f), RGB(0.9f, 0.9f, 0.1f), RGB(0.3f, 0.3f, 0.1f), RGB(0,0,0));
-    
-    // ===== CHÃO XADREZ =====
-    float floorY = 0.0f;
-    float tileSize = 100.0f;
-    int gridSize = 20;
-    
-    for (int i = -gridSize/2; i < gridSize/2; i++) {
-        for (int j = -gridSize/2; j < gridSize/2; j++) {
-            float x1 = i * tileSize;
-            float z1 = j * tileSize;
-            float x2 = (i + 1) * tileSize;
-            float z2 = (j + 1) * tileSize;
-            
-            // Vértices do quadrado
-            Point v0 = {x1, floorY, z1};
-            Point v1 = {x2, floorY, z1};
-            Point v2 = {x2, floorY, z2};
-            Point v3 = {x1, floorY, z2};
-            
-            // Material xadrez
-            int mat = ((i + j) % 2 == 0) ? whiteMat : blackMat;
-            
-            // Usar AddTriangle
-            AddTriangle(scene, v0, v1, v2, mat);
-            AddTriangle(scene, v0, v2, v3, mat);
-        }
-    }
-    
-    // ===== ESFERAS NOS CANTOS =====
-    float cornerDist = 600.0f;
-    float sphereRadius = 50.0f;
-    float sphereHeight = 100.0f;
-    
-    Point cornerPositions[8] = {
-        {-cornerDist, sphereHeight, -cornerDist},
-        {cornerDist, sphereHeight, -cornerDist},
-        {cornerDist, sphereHeight, cornerDist},
-        {-cornerDist, sphereHeight, cornerDist},
-        {-cornerDist, sphereHeight + 300, -cornerDist},
-        {cornerDist, sphereHeight + 300, -cornerDist},
-        {cornerDist, sphereHeight + 300, cornerDist},
-        {-cornerDist, sphereHeight + 300, cornerDist}
-    };
-    
-    int cornerMats[8] = {
-        redMat, blueMat, greenMat, yellowMat,
-        yellowMat, greenMat, blueMat, redMat
-    };
-    
-    for (int i = 0; i < 8; i++) {
-        AddSphere(scene, cornerPositions[i], sphereRadius, cornerMats[i]);
-    }
-    
-    // ===== COLUNAS VERTICAIS =====
-    float columnRadius = 20.0f;
-    float columnSpacing = 200.0f;
-    int numColumns = 5;
-    
-    for (int i = 0; i < numColumns; i++) {
-        float x = (i - numColumns/2) * columnSpacing;
-        float z = 300.0f;
-        
-        for (float y = 20; y < 400; y += 40) {
-            Point center = {x, y, z};
-            int mat = (i % 2 == 0) ? redMat : blueMat;
-            AddSphere(scene, center, columnRadius, mat);
-        }
-    }
-    
-    // ===== ANÉIS NO TETO =====
-    float ceilingY = 500.0f;
-    for (int ring = 1; ring <= 5; ring++) {
-        float radius = ring * 100.0f;
-        int numSpheres = ring * 8;
-        
-        for (int i = 0; i < numSpheres; i++) {
-            float angle = (2 * M_PI * i) / numSpheres;
-            float x = radius * cos(angle);
-            float z = radius * sin(angle);
-            
-            Point pos = {x, ceilingY, z};
-            int mat = (ring % 2 == 0) ? whiteMat : blackMat;
-            AddSphere(scene, pos, 20.0f, mat);
-        }
-    }
-    
-    // ===== ILUMINAÇÃO =====
-    PointLight* p1 = new PointLight(RGB(5000, 5000, 5000), Point(0, 400, 0));
-    scene.lights.push_back(p1);
-    scene.numLights++;
-    
-    PointLight* p2 = new PointLight(RGB(1000, 0, 0), Point(-500, 300, -500));
-    scene.lights.push_back(p2);
-    scene.numLights++;
-    
-    PointLight* p3 = new PointLight(RGB(0, 1000, 0), Point(500, 300, -500));
-    scene.lights.push_back(p3);
-    scene.numLights++;
-    
-    PointLight* p4 = new PointLight(RGB(0, 0, 1000), Point(500, 300, 500));
-    scene.lights.push_back(p4);
-    scene.numLights++;
-    
-    PointLight* p5 = new PointLight(RGB(1000, 1000, 0), Point(-500, 300, 500));
-    scene.lights.push_back(p5);
-    scene.numLights++;
-    
-    AmbientLight* al = new AmbientLight(RGB(0.1, 0.1, 0.1));
-    scene.lights.push_back(al);
-    scene.numLights++;
+static int AddPhongTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const ns) {
+    PhongTexture *brdf = new PhongTexture(filename);
+    brdf->Ka = Ka;
+    brdf->Kd = Kd;   // multiplicado pela cor da textura em f()
+    brdf->Ks = Ks;
+    brdf->Kt = RGB(0., 0., 0.);
+    brdf->ns = ns;
+    return (scene.AddMaterial(brdf));
 }
 
-
-void PhongTestScene(Scene& scene) {
-
-    // Material difuso puro (referência – sem especular)
+// Problema - para trocar com e sem textura, temos que mudar AddPhongMat por AddPhongTexMat
+// ou podemos criar um novo cenário exatamente igual, nome novo s oara textura.
+void PhongScene (Scene& scene) {
+    // purely diffuse (reference — no specular lobe)
     int const diff_mat = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),   // Ka
-        RGB(0.6f,  0.2f,  0.2f),    // Kd  (vermelho acastanhado)
-        RGB(0.0f,  0.0f,  0.0f),    // Ks  = 0  → sem lóbulo
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f,  0.2f,  0.2f),   // red-ish
+        RGB(0.0f,  0.0f,  0.0f),   // Ks = 0
         1.f);
 
-    // ns = 5  → lóbulo muito largo (quase difuso)
+    // ns = 5  — very broad lobe (near-diffuse)
     int const phong_rough = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.4f,  0.7f),    // Kd  azul
-        RGB(0.8f,  0.8f,  0.8f),    // Ks  branco
+        RGB(0.2f,  0.4f,  0.7f),   // blue
+        RGB(0.8f,  0.8f,  0.8f),
         5.f);
 
-    // ns = 50 → plástico típico
+    // ns = 50 — typical plastic
     int const phong_mid = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.6f,  0.2f),    // Kd  verde
+        RGB(0.2f,  0.6f,  0.2f),   // green
         RGB(0.8f,  0.8f,  0.8f),
         50.f);
 
-    // ns = 500 → muito brilhante
+    // ns = 500 — very shiny
     int const phong_shiny = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f,  0.4f,  0.1f),    // Kd  laranja
+        RGB(0.6f,  0.4f,  0.1f),   // orange
         RGB(0.9f,  0.9f,  0.9f),
         500.f);
 
-    // --- geometria: 4 esferas em linha ---
-    //   z=0, espaçadas de 2 unidades em X
-    AddSphere(scene, Point(-3.f, 0.f, 0.f), 0.9f, diff_mat);     // difuso puro
-    AddSphere(scene, Point(-1.f, 0.f, 0.f), 0.9f, phong_rough);  // ns=5
-    AddSphere(scene, Point( 1.f, 0.f, 0.f), 0.9f, phong_mid);    // ns=50
-    AddSphere(scene, Point( 3.f, 0.f, 0.f), 0.9f, phong_shiny);  // ns=500
-
-    // --- plano de chão (2 triângulos) para ver sombras ---
-    AddTriangle(scene,
-        Point(-6.f, -1.f, -3.f),
-        Point( 6.f, -1.f, -3.f),
-        Point( 6.f, -1.f,  3.f),
-        diff_mat);
-    AddTriangle(scene,
-        Point(-6.f, -1.f, -3.f),
-        Point( 6.f, -1.f,  3.f),
-        Point(-6.f, -1.f,  3.f),
-        diff_mat);
-
-    // --- iluminação ---
-    //  Point light principal: acima e ligeiramente à frente
-    PointLight* key = new PointLight(RGB(20.f, 20.f, 20.f), Point(2.f, 4.f, -3.f));
-    scene.lights.push_back(key);
-    scene.numLights++;
-
-    //  Fill light mais fraco do lado oposto
-    PointLight* fill = new PointLight(RGB(8.f, 8.f, 10.f), Point(-4.f, 2.f, -2.f));
-    scene.lights.push_back(fill);
-    scene.numLights++;
-
-    //  Ambient mínimo
-    AmbientLight* ambient = new AmbientLight(RGB(0.2f, 0.2f, 0.2f));
+    // place 4 spheres side by side
+    AddSphere(scene, Point(-3.f, 0.f, 5.f), 0.8f, diff_mat);
+    AddSphere(scene, Point(-1.f, 0.f, 5.f), 0.8f, phong_rough);
+    AddSphere(scene, Point( 1.f, 0.f, 5.f), 0.8f, phong_mid);
+    AddSphere(scene, Point( 3.f, 0.f, 5.f), 0.8f, phong_shiny);
+    
+    // ajustar aqui caso vejamos que esteja mt escuro, claro e coisas assim
+    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
     scene.lights.push_back(ambient);
+    scene.numLights++;
+    //PointLight *p1 = new PointLight(RGB(1.f, 1.f, 1.f), Point(0.f, 3.f, 0.f)); -- fica mt escuro
+    PointLight *p1 = new PointLight(RGB(50.f, 50.f, 50.f), Point(0.f, 3.f, 0.f));
+    scene.lights.push_back(p1);
+    scene.numLights++;
+}
+
+static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0) {
+    CookTorrance *brdf = new CookTorrance;
+    brdf->Ka = Ka;
+    brdf->Kd = Kd;
+    brdf->Ks = Ks;
+    brdf->Kt = RGB(0., 0., 0.);
+    brdf->roughness = roughness;
+    brdf->F0 = F0;
+    return (scene.AddMaterial(brdf));
+}
+
+// 4 esferas: roughness decrescente (mais rugoso -> mais espelho)
+// F0 = 0.04 simula plástico/dielectric; F0 alto simula metal
+void CookTorranceScene (Scene& scene) {
+    // roughness=1.0 — completamente difuso (sem especular visível)
+    int const ct_rough = AddCookTorranceMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f,  0.2f,  0.2f),   // vermelho
+        RGB(1.0f,  1.0f,  1.0f),
+        1.0f,
+        RGB(0.04f, 0.04f, 0.04f)); // dielectric F0
+
+    // roughness=0.5 — semi-rugoso
+    int const ct_mid = AddCookTorranceMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.2f,  0.4f,  0.7f),   // azul
+        RGB(1.0f,  1.0f,  1.0f),
+        0.5f,
+        RGB(0.04f, 0.04f, 0.04f));
+
+    // roughness=0.2 — brilhante (plástico)
+    int const ct_shiny = AddCookTorranceMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.2f,  0.6f,  0.2f),   // verde
+        RGB(1.0f,  1.0f,  1.0f),
+        0.2f,
+        RGB(0.04f, 0.04f, 0.04f));
+
+    // roughness=0.05, F0 alto — metal brilhante (ouro)
+    int const ct_metal = AddCookTorranceMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.0f,  0.0f,  0.0f),   // metais não têm difuso
+        RGB(1.0f,  1.0f,  1.0f),
+        0.05f,
+        RGB(1.0f, 0.71f, 0.29f));  // F0 do ouro
+
+    AddSphere(scene, Point(-3.f, 0.f, 5.f), 0.8f, ct_rough);
+    AddSphere(scene, Point(-1.f, 0.f, 5.f), 0.8f, ct_mid);
+    AddSphere(scene, Point( 1.f, 0.f, 5.f), 0.8f, ct_shiny);
+    AddSphere(scene, Point( 3.f, 0.f, 5.f), 0.8f, ct_metal);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
+    scene.lights.push_back(ambient);
+    scene.numLights++;
+    PointLight *p1 = new PointLight(RGB(50.f, 50.f, 50.f), Point(0.f, 3.f, 0.f));
+    scene.lights.push_back(p1);
     scene.numLights++;
 }

@@ -15,6 +15,9 @@
 #include "Sphere.hpp"
 #include "triangle.hpp"
 #include "BRDF.hpp"
+#include "Phong.hpp"
+#include "PhongTexture.hpp"
+#include "CookTorrance.hpp"
 
 void SpheresScene (Scene& scene, int const N_spheres);
 void SpheresTriScene (Scene& scene);
@@ -23,8 +26,7 @@ void DeFocusTriScene (Scene& scene);
 void CornellBox (Scene& scene);
 void DiffuseCornellBox (Scene& scene);
 void DLightChallenge (Scene& scene);
-void MassiveSphereScene(Scene& scene, int numSpheres);
-void FisheyeTestScene(Scene& scene);
-void PhongTestScene(Scene& scene);
+void PhongScene (Scene& scene);
+void CookTorranceScene (Scene& scene);
 
 #endif /* BuildScenes_hpp */

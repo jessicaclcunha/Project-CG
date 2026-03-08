@@ -1,5 +1,5 @@
 CXX      := g++ 
-CXXFLAGS := -std=c++11 -O3 -isysroot $(shell xcrun --show-sdk-path) -I/Library/Developer/CommandLineTools/usr/include/c++/v1
+CXXFLAGS := -std=c++11 -O3
 LDFLAGS  := 
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
@@ -8,7 +8,7 @@ SHELL	 := /bin/bash
 
 TARGET   := src
 
-INCLUDE  := -I$(TARGET)/Camera/ -I$(TARGET)/Image -I$(TARGET)/Light -I$(TARGET)/Primitive -I$(TARGET)/Primitive/BRDF -I$(TARGET)/Primitive/Geometry -I$(TARGET)/Rays -I$(TARGET)/Renderer -I$(TARGET)/Scene -I$(TARGET)/Shader -I$(TARGET)/utils -I$(TARGET)/Image/ToneMapper -I$(TARGET)/Image/PostFilter -I$(TARGET)/acceleration
+INCLUDE  := -I$(TARGET)/Camera/ -I$(TARGET)/Image -I$(TARGET)/Light -I$(TARGET)/Primitive -I$(TARGET)/Primitive/BRDF -I$(TARGET)/Primitive/Geometry -I$(TARGET)/Rays -I$(TARGET)/Renderer -I$(TARGET)/Scene -I$(TARGET)/Shader -I$(TARGET)/utils -I$(TARGET)/Image/ToneMapper -I$(TARGET)/Image/PostFilter
 
 SRC      :=                      \
 	$(wildcard $(TARGET)/*.cpp) \
@@ -19,7 +19,6 @@ SRC      :=                      \
 	$(wildcard $(TARGET)/Renderer/*.cpp)         \
 	$(wildcard $(TARGET)/Scene/*.cpp)         \
 	$(wildcard $(TARGET)/Shader/*.cpp)         \
-	$(wildcard $(TARGET)/acceleration/*.cpp)   \
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 DEPENDENCIES \

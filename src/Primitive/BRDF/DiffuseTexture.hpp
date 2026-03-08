@@ -11,6 +11,7 @@
 #include "BRDF.hpp"
 #include "ImagePPM.hpp"
 #include "Triangle.hpp"
+#include <cmath>
 
 class DiffuseTexture: public BRDF {
 private:
@@ -29,6 +30,12 @@ public:
 
         RGB color = Kd*texture.get(x, y);
         return color;
+    }
+
+    // Lambertian diffuse using the texture colour: Kd_tex / pi
+    RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {
+        RGB Kd_tex = GetKd(curTexCoord);
+        return Kd_tex * (1.f / M_PI);
     }
 };
 

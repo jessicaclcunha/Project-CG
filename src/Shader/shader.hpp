@@ -17,9 +17,6 @@ public:
     Shader (Scene *_scene): scene(_scene) {}
     ~Shader () {}
     virtual RGB shade (bool intersected, Intersection isect, int depth) {return RGB();}
-    // qualquer BRDF que eu vá criar vai herdar desta classe, ou seja, 
-    // vai ser um shade, vai receber os parametros do shade e retornar 
-    // o que o shade retorna
 };
 
 #endif /* shader_hpp */

@@ -14,16 +14,16 @@ class StandardRenderer: public Renderer {
 private:
     int spp;
     bool jitter;
-    
 public:
-    // Manter construtores simples (sem tone mapping)
-    StandardRenderer(Camera *cam, Scene *scene, Image *img, Shader *shd, int _spp): 
-        Renderer(cam, scene, img, shd), spp(_spp), jitter(false) {}
-    
-    StandardRenderer(Camera *cam, Scene *scene, Image *img, Shader *shd, int _spp, bool _jitter): 
-        Renderer(cam, scene, img, shd), spp(_spp), jitter(_jitter) {}
-    
-    void Render();
+    StandardRenderer (Camera *cam, Scene * scene, Image * img, Shader *shd, int _spp): Renderer(cam, scene, img, shd) {
+        spp = _spp;
+        jitter = false;
+    }
+    StandardRenderer (Camera *cam, Scene * scene, Image * img, Shader *shd, int _spp, bool _jitter): Renderer(cam, scene, img, shd) {
+        spp = _spp;
+        jitter = _jitter;
+    }
+    void Render ();
 };
 
 #endif /* StandardRenderer_hpp */

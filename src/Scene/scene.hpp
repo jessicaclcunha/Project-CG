@@ -11,35 +11,20 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
-#include "BVHAccel.hpp"
 #include "primitive.hpp"
 #include "light.hpp"
 #include "ray.hpp"
 #include "intersection.hpp"
 #include "BRDF.hpp"
 
-class AreaLight;
-
 class Scene {
     std::vector <Primitive *> prims;
     std::vector <BRDF *> BRDFs;
-    BVHAccel* bvh;
-    bool useBVH;
-    std::vector <Primitive *> lightPrims; 
-    BVHAccel* lightBVH;                    
-    bool useLightBVH;
-    std::map<Geometry*, AreaLight*> geometryToLight; 
 public:
     std::vector <Light *> lights;
     int numPrimitives, numLights, numBRDFs;
 
-    Scene() : numPrimitives(0), numLights(0), numBRDFs(0), 
-              bvh(nullptr), useBVH(false), 
-              lightBVH(nullptr), useLightBVH(false) {}
-    ~Scene();
-    void BuildBVH();
-    void BuildLightBVH();
+    Scene (): numPrimitives(0), numLights(0), numBRDFs(0) {}
     bool SetLights (void) { return true; };
     bool trace (Ray r, Intersection *isect);
     bool visibility (Ray s, const float maxL);
