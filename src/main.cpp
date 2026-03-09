@@ -38,8 +38,9 @@ int main(int argc, const char * argv[]) {
     /* Scenes*/
     //DLightChallenge(scene);
     //PhongScene(scene);
-    //PhongScene(scene);
-    CookTorranceScene(scene);
+    PhongTextureScene(scene);
+    //CookTorranceScene(scene);
+    //CookTorranceTextureScene(scene);
 
     /* Camera*/
     const Point Eye ={0,0,-5}, At={0,0,1};

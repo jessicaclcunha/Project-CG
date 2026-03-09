@@ -565,6 +565,40 @@ void PhongScene (Scene& scene) {
     scene.numLights++;
 }
 
+void PhongTextureScene (Scene& scene) {
+    // Esfera 1: sem textura (referência)
+    int const diff = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f, 0.2f, 0.2f),
+        RGB(0.0f, 0.0f, 0.0f),
+        1.f);
+
+    // Esfera 2: COM textura Dog.ppm
+    int const tex_dog = AddPhongTexMat(scene, "Dog.ppm",
+        RGB(0.1f, 0.1f, 0.1f),
+        RGB(1.0f, 1.0f, 1.0f),  // Kd multiplicador
+        RGB(0.8f, 0.8f, 0.8f),  // Ks especular
+        50.f);
+
+    // Esfera 3: COM textura UMinho.ppm
+    int const tex_um = AddPhongTexMat(scene, "UMinho.ppm",
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(1.2f, 1.2f, 1.2f),
+        RGB(0.8f, 0.8f, 0.8f),
+        50.f);
+
+    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, diff);
+    AddSphere(scene, Point( 0.f, 0.f, 5.f), 0.8f, tex_dog);
+    AddSphere(scene, Point( 2.f, 0.f, 5.f), 0.8f, tex_um);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.15f, 0.15f, 0.15f));
+    scene.lights.push_back(ambient);
+    scene.numLights++;
+    PointLight *p1 = new PointLight(RGB(120.f, 120.f, 120.f), Point(0.f, 3.f, 0.f));
+    scene.lights.push_back(p1);
+    scene.numLights++;
+}
+
 static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0) {
     CookTorrance *brdf = new CookTorrance;
     brdf->Ka = Ka;
@@ -620,6 +654,42 @@ void CookTorranceScene (Scene& scene) {
     scene.lights.push_back(ambient);
     scene.numLights++;
     PointLight *p1 = new PointLight(RGB(50.f, 50.f, 50.f), Point(0.f, 3.f, 0.f));
+    scene.lights.push_back(p1);
+    scene.numLights++;
+}
+void CookTorranceTextureScene(Scene& scene) {
+    // Esfera 1: sem textura (referência)
+    int const ct_diff = AddCookTorranceMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f, 0.2f, 0.2f),   // vermelho
+        RGB(1.0f, 1.0f, 1.0f),
+        1.0f,
+        RGB(0.04f, 0.04f, 0.04f)); // dielectric F0
+
+    // Esfera 2: COM textura Dog.ppm
+    int const ct_tex_dog = AddTextMat(scene, "Dog.ppm",
+        RGB(0.1f, 0.1f, 0.1f),
+        RGB(1.0f, 1.0f, 1.0f),  // Kd multiplicador
+        RGB(1.0f, 1.0f, 1.0f),
+        RGB(0.0f, 0.0f, 0.0f),
+        0.5f);
+
+    // Esfera 3: COM textura UMinho.ppm
+    int const ct_tex_um = AddTextMat(scene, "UMinho.ppm",
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(1.2f, 1.2f, 1.2f),
+        RGB(1.0f, 1.0f, 1.0f),
+        RGB(0.0f, 0.0f, 0.0f),
+        0.2f);
+
+    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, ct_diff);
+    AddSphere(scene, Point(0.f, 0.f, 5.f), 0.8f, ct_tex_dog);
+    AddSphere(scene, Point(2.f, 0.f, 5.f), 0.8f, ct_tex_um);
+
+    AmbientLight* ambient = new AmbientLight(RGB(0.15f, 0.15f, 0.15f));
+    scene.lights.push_back(ambient);
+    scene.numLights++;
+    PointLight* p1 = new PointLight(RGB(120.f, 120.f, 120.f), Point(0.f, 3.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }

@@ -6,6 +6,7 @@
 //
 
 #include <stdio.h>
+#include <cmath>
 #include "Sphere.hpp"
 
 bool Sphere::intersect(Ray r, Intersection *isect) {
@@ -47,6 +48,26 @@ bool Sphere::intersect(Ray r, Intersection *isect) {
         isect->pix_x = r.pix_x;
         isect->pix_y = r.pix_y;
         isect->incident_eta = r.propagating_eta;
+
+        Vector normal_local = C.vec2point(pHit);
+        normal_local.normalize();
+
+        float u = 0.5f + atan2f(normal_local.Z, normal_local.X) / (2.0f * M_PI);        
+        float v = 0.5f - asinf(normal_local.Y) / M_PI;
+
+        u = fmodf(u * 2.0f, 1.0f);  // Repete textura 2x
+        v = fmodf(v * 2.0f, 1.0f);
+
+        v = fmodf(v + 0.6f, 1.0f);
+    
+        // Garantir que u e v estão em [0, 1] (por causa de erros de floating point)
+        if (u < 0.0f) u = 0.0f;
+        if (u > 1.0f) u = 1.0f;
+        if (v < 0.0f) v = 0.0f;
+        if (v > 1.0f) v = 1.0f;
+        
+        isect->TexCoord.u = u;
+        isect->TexCoord.v = v;
         
         return true;
     }

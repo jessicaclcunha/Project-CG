@@ -27,6 +27,8 @@ void CornellBox (Scene& scene);
 void DiffuseCornellBox (Scene& scene);
 void DLightChallenge (Scene& scene);
 void PhongScene (Scene& scene);
+void PhongTextureScene (Scene& scene);
 void CookTorranceScene (Scene& scene);
+void CookTorranceTextureScene (Scene& scene);
 
 #endif /* BuildScenes_hpp */
