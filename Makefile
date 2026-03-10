@@ -54,20 +54,4 @@ run: $(APP_DIR)/$(TARGET)
 
 display:
 	@echo "Displaying output image..."
-	@if [[ "$$(uname)" == "Darwin" ]]; then open $(APP_DIR)/result/*.ppm; else display $(APP_DIR)/result/*.ppm; fi
-
-VIEWER      := tools/brdf_viewer.html
-VIEWER_SRV  := tools/serve_viewer.py
-PPM_OUT     := $(APP_DIR)/result/reference.ppm
-
-view: $(APP_DIR)/$(TARGET)
-	@echo "Rendering..."
-	@cd $(APP_DIR) && ./$(TARGET)
-	@echo "Starting BRDF Viewer at http://localhost:8765 ..."
-	@python3 $(VIEWER_SRV) $(PPM_OUT) $(VIEWER) 8765
-
-view-only:
-	@echo "Starting BRDF Viewer at http://localhost:8765 ..."
-	@python3 $(VIEWER_SRV) $(PPM_OUT) $(VIEWER) 8765
-
-.PHONY: all build clean run display view view-only
+	@if [[ "$$(uname)" == "Darwin" ]]; then open $(APP_DIR)/result/*.ppm; else display -resize 1280x1280 $(APP_DIR)/result/*.ppm; fi

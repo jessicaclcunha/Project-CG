@@ -82,7 +82,7 @@ static RGB direct_AmbientLight (AmbientLight * l, BRDF * f) {
 static RGB direct_PointLight (PointLight* l, Scene *scene, Intersection isect, BRDF * f) {
     RGB color (0., 0., 0.);
 
-    if (f->Kd.isZero() && f->Ks.isZero()) return color;
+    if (f->Kd.isZero() && f->Ks_brdf.isZero()) return color;
 
     Point Lpos;
     RGB L = l->Sample_L(NULL, &Lpos);

@@ -38,9 +38,10 @@ int main(int argc, const char * argv[]) {
     /* Scenes*/
     //DLightChallenge(scene);
     //PhongScene(scene);
-    PhongTextureScene(scene);
     //CookTorranceScene(scene);
-    //CookTorranceTextureScene(scene);
+    //PhongTextureScene (scene);
+    //CookTorranceTextureScene (scene);
+    CookTorranceJustOneThing (scene);
 
     /* Camera*/
     const Point Eye ={0,0,-5}, At={0,0,1};
@@ -55,11 +56,13 @@ int main(int argc, const char * argv[]) {
     Perspective *cam = new Perspective(Eye, At, Up, W, H, fovHrad, deFocusRad, FocusDist);
 
     /* Shader */
-    //shd = new PathTracing(&scene, RGB(0.,0.,0.2));
     shd = new DistributedShader(&scene, RGB(0.,0.,0.2));
-    
-    // declare the renderer
-    int const spp=16;
+    int const spp=128;
+
+    //shd = new WhittedShader(&scene, RGB(0.,0.,0.2));
+    //int const spp=1;
+
+
     
     bool const jitter=true;
     StandardRenderer myRender (cam, &scene, img, shd, spp, jitter);

@@ -24,6 +24,7 @@ public:
     bool textured;
     float eta;
     RGB Ka, Kd, Ks, Kt;
+    RGB Ks_brdf;  // especular glossy do BRDF — independente dos raios de espelho do shader
 
     Vec2 curTexCoord;  // set by caller before invoking f() for textured materials
 

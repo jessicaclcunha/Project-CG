@@ -18,6 +18,7 @@
 #include "Phong.hpp"
 #include "PhongTexture.hpp"
 #include "CookTorrance.hpp"
+#include "CookTorranceTexture.hpp"
 
 void SpheresScene (Scene& scene, int const N_spheres);
 void SpheresTriScene (Scene& scene);
@@ -30,5 +31,6 @@ void PhongScene (Scene& scene);
 void PhongTextureScene (Scene& scene);
 void CookTorranceScene (Scene& scene);
 void CookTorranceTextureScene (Scene& scene);
+void CookTorranceJustOneThing (Scene& scene);
 
 #endif /* BuildScenes_hpp */

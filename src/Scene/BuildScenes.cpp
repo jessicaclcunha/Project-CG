@@ -14,6 +14,7 @@ static int AddTextMat (Scene& scene, std::string filename, RGB const Ka, RGB con
 static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const ns);
 static int AddPhongTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const ns);
 static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0);
+static int AddCookTorranceTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0);
 static void AddSphere (Scene& scene, Point const C, float const radius,
                             int const mat_ndx);
 static void AddTriangle (Scene& scene,
@@ -502,7 +503,8 @@ static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, 
     Phong *brdf = new Phong;
     brdf->Ka = Ka;
     brdf->Kd = Kd;
-    brdf->Ks = Ks;
+    brdf->Ks     = RGB(0., 0., 0.);  // sem raios de espelho
+    brdf->Ks_brdf = Ks;              // especular do BRDF Phong
     brdf->Kt = RGB(0., 0., 0.);
     brdf->ns = ns;
     return (scene.AddMaterial(brdf));
@@ -511,8 +513,9 @@ static int AddPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, 
 static int AddPhongTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const ns) {
     PhongTexture *brdf = new PhongTexture(filename);
     brdf->Ka = Ka;
-    brdf->Kd = Kd;   // multiplicado pela cor da textura em f()
-    brdf->Ks = Ks;
+    brdf->Kd = Kd;
+    brdf->Ks     = RGB(0., 0., 0.);  // sem raios de espelho
+    brdf->Ks_brdf = Ks;              // especular do BRDF Phong
     brdf->Kt = RGB(0., 0., 0.);
     brdf->ns = ns;
     return (scene.AddMaterial(brdf));
@@ -565,131 +568,216 @@ void PhongScene (Scene& scene) {
     scene.numLights++;
 }
 
-void PhongTextureScene (Scene& scene) {
-    // Esfera 1: sem textura (referência)
-    int const diff = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f, 0.2f, 0.2f),
-        RGB(0.0f, 0.0f, 0.0f),
-        1.f);
-
-    // Esfera 2: COM textura Dog.ppm
-    int const tex_dog = AddPhongTexMat(scene, "Dog.ppm",
-        RGB(0.1f, 0.1f, 0.1f),
-        RGB(1.0f, 1.0f, 1.0f),  // Kd multiplicador
-        RGB(0.8f, 0.8f, 0.8f),  // Ks especular
-        50.f);
-
-    // Esfera 3: COM textura UMinho.ppm
-    int const tex_um = AddPhongTexMat(scene, "UMinho.ppm",
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(1.2f, 1.2f, 1.2f),
-        RGB(0.8f, 0.8f, 0.8f),
-        50.f);
-
-    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, diff);
-    AddSphere(scene, Point( 0.f, 0.f, 5.f), 0.8f, tex_dog);
-    AddSphere(scene, Point( 2.f, 0.f, 5.f), 0.8f, tex_um);
-
-    AmbientLight *ambient = new AmbientLight(RGB(0.15f, 0.15f, 0.15f));
-    scene.lights.push_back(ambient);
-    scene.numLights++;
-    PointLight *p1 = new PointLight(RGB(120.f, 120.f, 120.f), Point(0.f, 3.f, 0.f));
-    scene.lights.push_back(p1);
-    scene.numLights++;
-}
-
 static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0) {
     CookTorrance *brdf = new CookTorrance;
     brdf->Ka = Ka;
     brdf->Kd = Kd;
-    brdf->Ks = Ks;
+    brdf->Ks      = RGB(0., 0., 0.);  // sem raios de espelho
+    brdf->Ks_brdf = Ks;               // especular do BRDF Cook-Torrance
     brdf->Kt = RGB(0., 0., 0.);
     brdf->roughness = roughness;
     brdf->F0 = F0;
     return (scene.AddMaterial(brdf));
 }
 
-// 4 esferas: roughness decrescente (mais rugoso -> mais espelho)
-// F0 = 0.04 simula plástico/dielectric; F0 alto simula metal
+
 void CookTorranceScene (Scene& scene) {
-    // roughness=1.0 — completamente difuso (sem especular visível)
-    int const ct_rough = AddCookTorranceMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f,  0.2f,  0.2f),   // vermelho
-        RGB(1.0f,  1.0f,  1.0f),
-        1.0f,
-        RGB(0.04f, 0.04f, 0.04f)); // dielectric F0
+    RGB const Kd(0.1f, 0.1f, 0.1f); 
+    // cor difusa - É a cor base da esfera — a componente Lambert (difuso). 
+    // Independente do ângulo da câmara.
 
-    // roughness=0.5 — semi-rugoso
-    int const ct_mid = AddCookTorranceMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.4f,  0.7f),   // azul
-        RGB(1.0f,  1.0f,  1.0f),
-        0.5f,
-        RGB(0.04f, 0.04f, 0.04f));
+    RGB const Ks(1.0f, 1.0f, 1.0f); 
+    // escala do especular
+    // Multiplicador que escala o resultado do Cook-Torrance especular. 
+    // (1,1,1) = sem escala, usa o F0 diretamente. 
+    // (0.5,0.5,0.5) cortaria o especular a metade. 
+    // No Cook-Torrance fisicamente correto, 
+    // Ks devia ser (1,1,1) — o F0 é que controla a intensidade.
 
-    // roughness=0.2 — brilhante (plástico)
-    int const ct_shiny = AddCookTorranceMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.6f,  0.2f),   // verde
-        RGB(1.0f,  1.0f,  1.0f),
-        0.2f,
-        RGB(0.04f, 0.04f, 0.04f));
 
-    // roughness=0.05, F0 alto — metal brilhante (ouro)
-    int const ct_metal = AddCookTorranceMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.0f,  0.0f,  0.0f),   // metais não têm difuso
-        RGB(1.0f,  1.0f,  1.0f),
-        0.05f,
-        RGB(1.0f, 0.71f, 0.29f));  // F0 do ouro
+    RGB const F0(0.95f, 0.64f, 0.54f); // reflectância a 0° (Fresnel)
+    // É o valor de Fresnel à incidência normal (raio perpendicular à superfície). 
+    // Representa "quanto % da luz é refletida especularmente quando olhas diretamente 
+    // para a superfície":
+    // - 0.04 = plástico/vidro (4%) — especular muito fraco
+    // - 0.5 = semi-metal (50%)
+    // - 0.9 = metal (90%) — especular domina
+    // - (1.0, 0.71, 0.29) = ouro (cores diferentes por canal)
 
-    AddSphere(scene, Point(-3.f, 0.f, 5.f), 0.8f, ct_rough);
-    AddSphere(scene, Point(-1.f, 0.f, 5.f), 0.8f, ct_mid);
-    AddSphere(scene, Point( 1.f, 0.f, 5.f), 0.8f, ct_shiny);
-    AddSphere(scene, Point( 3.f, 0.f, 5.f), 0.8f, ct_metal);
+    RGB const Ka(0.02f, 0.02f, 0.02f);  // 
+
+
+    // São os valores de roughness — 
+    // o parâmetro que controla a rugosidade microscópica da superfície.
+    // roughness=1.0 - superfície muito irregular - esfera parece fosca/mate, sem highlight visí
+    // roughness=0.5 - moderadamente irregular - highlight suave e largo
+    // roughness=0.2 - quase lisa - highlight nítido e médio
+    // roughness=0.05 - quase espelho perfeito - ponto muito brilhante e pequeno, quase espelho
+    
+
+    int const ct_rough  = AddCookTorranceMat(scene, Ka, Kd, Ks, 1.0f,  F0);
+    int const ct_mid    = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.5f,  F0);
+    int const ct_shiny  = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.2f,  F0);
+    int const ct_mirror = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.05f, F0);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, ct_rough);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, ct_mid);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, ct_shiny);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, ct_mirror);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
+    // Iluminação global uniforme — ilumina todos os pontos da cena igualmente, 
+    // sem direção, sem sombras. 
+    // Simula luz indireta do ambiente. Valor baixo (0.02) 
+    // apenas evita que as zonas em sombra fiquem completamente pretas.
+
+    scene.lights.push_back(ambient);
+    // Uma luz que emite em todas as direções a partir de um ponto. 
+    // A intensidade chega às esferas atenuada por 1/r² (quanto mais longe, mais fraca). 
+    // Valor 200 é alto para compensar a distância e a atenuação 1/r². 
+    // É a responsável pelo highlight especular.
+
+    scene.numLights++;
+    PointLight *p1 = new PointLight(RGB(200.f, 200.f, 200.f), Point(0.f, 2.f, -1.f));
+    scene.lights.push_back(p1);
+    scene.numLights++;
+}
+
+void CookTorranceJustOneThing (Scene& scene) {
+
+    /* OURO:
+    RGB const Kd(0.05f, 0.04f, 0.01f);  
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const F0(1.00f, 0.71f, 0.29f);
+    RGB const Ka(0.02f, 0.02f, 0.01f);  
+    float const roughness = 0.3f; 
+    */
+    /*PRATA:
+    RGB const Kd(0.15f, 0.15f, 0.15f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const F0(0.95f, 0.93f, 0.88f);
+    RGB const Ka(0.05f, 0.05f, 0.05f); 
+    float const roughness = 0.15f;
+    */
+    /* COBRE avermlehado
+    RGB const Kd(0.10f, 0.04f, 0.02f); 
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const F0(0.95f, 0.64f, 0.54f);   
+    RGB const Ka(0.03f, 0.01f, 0.01f);   
+    float const roughness = 0.2f;   
+    */
+    /*SAFIRA:
+    RGB const Kd(0.01f, 0.02f, 0.35f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const F0(0.04f, 0.04f, 0.04f);
+    RGB const Ka(0.01f, 0.01f, 0.03f);
+    float const roughness = 0.2f;
+    */
+    /*PLÁSTICO:
+    RGB const Kd(0.8f,  0.1f,  0.1f); 
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const F0(0.04f, 0.04f, 0.04f);  
+    RGB const Ka(0.05f, 0.01f, 0.01f); 
+    float const roughness = 0.3f;  
+    */
+    /*BORRACHA:*/
+    RGB const Kd(0.02f, 0.02f, 0.02f);   
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const F0(0.04f, 0.04f, 0.04f);  
+    RGB const Ka(0.01f, 0.01f, 0.01f);   
+    float const roughness = 0.9f;         
+
+
+    int const app  = AddCookTorranceMat(scene, Ka, Kd, Ks, roughness,  F0);
+
+    AddSphere(scene, Point(0.f, 0.f, 3.f), 0.8f, app);
 
     AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    PointLight *p1 = new PointLight(RGB(50.f, 50.f, 50.f), Point(0.f, 3.f, 0.f));
+
+    PointLight *p1 = new PointLight(RGB(400.f, 400.f, 400.f), Point(0.f,  2.f, -1.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
-void CookTorranceTextureScene(Scene& scene) {
-    // Esfera 1: sem textura (referência)
-    int const ct_diff = AddCookTorranceMat(scene,
+
+/*
+static int AddCookTorranceTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, RGB const F0) {
+    CookTorranceTexture *brdf = new CookTorranceTexture(filename);
+    brdf->Ka = Ka;
+    brdf->Kd = Kd;
+    brdf->Ks      = RGB(0., 0., 0.);  // sem raios de espelho
+    brdf->Ks_brdf = Ks;               // especular do BRDF
+    brdf->Kt = RGB(0., 0., 0.);
+    brdf->roughness = roughness;
+    brdf->F0 = F0;
+    return (scene.AddMaterial(brdf));
+}
+
+// 3 esferas: sem textura (referência), Dog.ppm, UMinho.ppm — especular Phong
+void PhongTextureScene (Scene& scene) {
+    int const plain = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f, 0.2f, 0.2f),   // vermelho
-        RGB(1.0f, 1.0f, 1.0f),
-        1.0f,
-        RGB(0.04f, 0.04f, 0.04f)); // dielectric F0
+        RGB(0.6f, 0.2f, 0.2f),
+        RGB(0.8f, 0.8f, 0.8f),
+        50.f);
 
-    // Esfera 2: COM textura Dog.ppm
-    int const ct_tex_dog = AddTextMat(scene, "Dog.ppm",
-        RGB(0.1f, 0.1f, 0.1f),
-        RGB(1.0f, 1.0f, 1.0f),  // Kd multiplicador
-        RGB(1.0f, 1.0f, 1.0f),
-        RGB(0.0f, 0.0f, 0.0f),
-        0.5f);
-
-    // Esfera 3: COM textura UMinho.ppm
-    int const ct_tex_um = AddTextMat(scene, "UMinho.ppm",
+    int const tex_dog = AddPhongTexMat(scene, "Dog.ppm",
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(1.2f, 1.2f, 1.2f),
         RGB(1.0f, 1.0f, 1.0f),
-        RGB(0.0f, 0.0f, 0.0f),
-        0.2f);
+        RGB(0.8f, 0.8f, 0.8f),
+        50.f);
 
-    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, ct_diff);
-    AddSphere(scene, Point(0.f, 0.f, 5.f), 0.8f, ct_tex_dog);
-    AddSphere(scene, Point(2.f, 0.f, 5.f), 0.8f, ct_tex_um);
+    int const tex_um = AddPhongTexMat(scene, "UMinho.ppm",
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(1.0f, 1.0f, 1.0f),
+        RGB(0.8f, 0.8f, 0.8f),
+        50.f);
 
-    AmbientLight* ambient = new AmbientLight(RGB(0.15f, 0.15f, 0.15f));
+    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, plain);
+    AddSphere(scene, Point( 0.f, 0.f, 5.f), 0.8f, tex_dog);
+    AddSphere(scene, Point( 2.f, 0.f, 5.f), 0.8f, tex_um);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.1f, 0.1f, 0.1f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    PointLight* p1 = new PointLight(RGB(120.f, 120.f, 120.f), Point(0.f, 3.f, 0.f));
+    PointLight *p1 = new PointLight(RGB(80.f, 80.f, 80.f), Point(0.f, 3.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
+
+// 3 esferas: sem textura (referência), Dog.ppm, UMinho.ppm — especular Cook-Torrance
+void CookTorranceTextureScene (Scene& scene) {
+    int const plain = AddCookTorranceMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f, 0.2f, 0.2f),
+        RGB(1.0f, 1.0f, 1.0f),
+        0.3f,
+        RGB(0.04f, 0.04f, 0.04f));
+
+    int const tex_dog = AddCookTorranceTexMat(scene, "Dog.ppm",
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(1.0f, 1.0f, 1.0f),
+        RGB(1.0f, 1.0f, 1.0f),
+        0.3f,
+        RGB(0.04f, 0.04f, 0.04f));
+
+    int const tex_um = AddCookTorranceTexMat(scene, "UMinho.ppm",
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(1.0f, 1.0f, 1.0f),
+        RGB(1.0f, 1.0f, 1.0f),
+        0.3f,
+        RGB(0.04f, 0.04f, 0.04f));
+
+    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, plain);
+    AddSphere(scene, Point( 0.f, 0.f, 5.f), 0.8f, tex_dog);
+    AddSphere(scene, Point( 2.f, 0.f, 5.f), 0.8f, tex_um);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.1f, 0.1f, 0.1f));
+    scene.lights.push_back(ambient);
+    scene.numLights++;
+    PointLight *p1 = new PointLight(RGB(80.f, 80.f, 80.f), Point(0.f, 3.f, 0.f));
+    scene.lights.push_back(p1);
+    scene.numLights++;
+}
+    */

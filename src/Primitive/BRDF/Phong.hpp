@@ -24,12 +24,12 @@ public:
             color += Kd * (1.f / M_PI);
         }
 
-        if (!Ks.isZero() && (type & GLOSSY_REF)) {
+        if (!Ks_brdf.isZero() && (type & GLOSSY_REF)) {
             float cosWiN = std::max(0.f, N.dot(wi));
             Vector R = 2.f * cosWiN * N - wi;
             float cosRWo = std::max(0.f, R.dot(wo));
             float spec = ((ns + 2.f) / (2.f * M_PI)) * powf(cosRWo, ns);
-            color += Ks * spec;
+            color += Ks_brdf * spec;
         }
 
         return color;
