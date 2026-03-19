@@ -28,9 +28,9 @@
 * [ ] Testar com materiais: plástico, ouro, cobre, borracha.
 
 **Membro B:**
-* [ ] Criar `AddBox()` com triângulos (cubo).
-* [ ] Criar cena `PhongScene` com cubo + esfera lado a lado.
-* [ ] Criar cena `CookTorranceScene` idem.
+* [✔️] Criar `AddBox()` com triângulos (cubo).
+* [✔️] Criar cena `PhongScene` com cubo + esfera lado a lado.
+* [✔️] Criar cena `CookTorranceScene` idem.
 
 #### Semana 2: Multi-BRDF na Mesma Forma + Texturas em Cubos (March 23 to 29)
 

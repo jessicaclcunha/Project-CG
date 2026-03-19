@@ -123,6 +123,35 @@ void SpheresScene (Scene& scene, int const N_spheres){
     return ;
 }
 
+static void AddBox(Scene& scene,
+                   Point const center, float const half,
+                   int const mat_ndx)
+{
+    // 8 vértices
+    float x0 = center.X - half, x1 = center.X + half;
+    float y0 = center.Y - half, y1 = center.Y + half;
+    float z0 = center.Z - half, z1 = center.Z + half;
+
+    // Face frontal  (z = z0, normal -Z)
+    AddTriangle(scene, Point(x0,y0,z0), Point(x1,y0,z0), Point(x1,y1,z0), mat_ndx);
+    AddTriangle(scene, Point(x0,y0,z0), Point(x1,y1,z0), Point(x0,y1,z0), mat_ndx);
+    // Face traseira (z = z1, normal +Z)
+    AddTriangle(scene, Point(x1,y0,z1), Point(x0,y0,z1), Point(x0,y1,z1), mat_ndx);
+    AddTriangle(scene, Point(x1,y0,z1), Point(x0,y1,z1), Point(x1,y1,z1), mat_ndx);
+    // Face esquerda (x = x0, normal -X)
+    AddTriangle(scene, Point(x0,y0,z1), Point(x0,y0,z0), Point(x0,y1,z0), mat_ndx);
+    AddTriangle(scene, Point(x0,y0,z1), Point(x0,y1,z0), Point(x0,y1,z1), mat_ndx);
+    // Face direita  (x = x1, normal +X)
+    AddTriangle(scene, Point(x1,y0,z0), Point(x1,y0,z1), Point(x1,y1,z1), mat_ndx);
+    AddTriangle(scene, Point(x1,y0,z0), Point(x1,y1,z1), Point(x1,y1,z0), mat_ndx);
+    // Face inferior (y = y0, normal -Y)
+    AddTriangle(scene, Point(x0,y0,z1), Point(x1,y0,z1), Point(x1,y0,z0), mat_ndx);
+    AddTriangle(scene, Point(x0,y0,z1), Point(x1,y0,z0), Point(x0,y0,z0), mat_ndx);
+    // Face superior (y = y1, normal +Y)
+    AddTriangle(scene, Point(x0,y1,z0), Point(x1,y1,z0), Point(x1,y1,z1), mat_ndx);
+    AddTriangle(scene, Point(x0,y1,z0), Point(x1,y1,z1), Point(x0,y1,z1), mat_ndx);
+}
+
 // Scene with  sphere and 4 triangles
 void SpheresTriScene (Scene& scene) {
     int const red_mat = AddDiffuseMat(scene, RGB (0.9, 0.1, 0.1));
@@ -524,46 +553,54 @@ static int AddPhongTexMat (Scene& scene, std::string filename, RGB const Ka, RGB
 // Problema - para trocar com e sem textura, temos que mudar AddPhongMat por AddPhongTexMat
 // ou podemos criar um novo cenário exatamente igual, nome novo s oara textura.
 void PhongScene (Scene& scene) {
-    // purely diffuse (reference — no specular lobe)
-    int const diff_mat = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f,  0.2f,  0.2f),   // red-ish
-        RGB(0.0f,  0.0f,  0.0f),   // Ks = 0
-        1.f);
-
-    // ns = 5  — very broad lobe (near-diffuse)
+    // ns = 5 — lóbulo largo (quase difuso), azul
     int const phong_rough = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.4f,  0.7f),   // blue
+        RGB(0.2f,  0.4f,  0.7f),
         RGB(0.8f,  0.8f,  0.8f),
         5.f);
 
-    // ns = 50 — typical plastic
-    int const phong_mid = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.6f,  0.2f),   // green
-        RGB(0.8f,  0.8f,  0.8f),
-        50.f);
-
-    // ns = 500 — very shiny
+    // ns = 500 — muito brilhante, laranja
     int const phong_shiny = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f,  0.4f,  0.1f),   // orange
+        RGB(0.6f,  0.4f,  0.1f),
         RGB(0.9f,  0.9f,  0.9f),
         500.f);
 
-    // place 4 spheres side by side
-    AddSphere(scene, Point(-3.f, 0.f, 5.f), 0.8f, diff_mat);
-    AddSphere(scene, Point(-1.f, 0.f, 5.f), 0.8f, phong_rough);
-    AddSphere(scene, Point( 1.f, 0.f, 5.f), 0.8f, phong_mid);
-    AddSphere(scene, Point( 3.f, 0.f, 5.f), 0.8f, phong_shiny);
-    
-    // ajustar aqui caso vejamos que esteja mt escuro, claro e coisas assim
-    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
+    // ns = 50 — plástico típico, verde
+    int const phong_mid = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.2f,  0.6f,  0.2f),
+        RGB(0.8f,  0.8f,  0.8f),
+        50.f);
+
+    // puramente difuso (sem especular), vermelho
+    int const diff_mat = AddPhongMat(scene,
+        RGB(0.05f, 0.05f, 0.05f),
+        RGB(0.6f,  0.2f,  0.2f),
+        RGB(0.0f,  0.0f,  0.0f),
+        1.f);
+
+    // layout 2x2: [cubo | esfera] por célula
+    // linha de cima
+    AddBox   (scene, Point(-2.2f,  1.0f, 5.f), 0.6f, phong_rough);
+    AddSphere(scene, Point(-1.0f,  1.0f, 5.f), 0.6f, phong_rough);
+
+    AddBox   (scene, Point( 1.0f,  1.0f, 5.f), 0.6f, phong_shiny);
+    AddSphere(scene, Point( 2.2f,  1.0f, 5.f), 0.6f, phong_shiny);
+
+    // linha de baixo
+    AddBox   (scene, Point(-2.2f, -1.0f, 5.f), 0.6f, phong_mid);
+    AddSphere(scene, Point(-1.0f, -1.0f, 5.f), 0.6f, phong_mid);
+
+    AddBox   (scene, Point( 1.0f, -1.0f, 5.f), 0.6f, diff_mat);
+    AddSphere(scene, Point( 2.2f, -1.0f, 5.f), 0.6f, diff_mat);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.1f, 0.1f, 0.1f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    //PointLight *p1 = new PointLight(RGB(1.f, 1.f, 1.f), Point(0.f, 3.f, 0.f)); -- fica mt escuro
-    PointLight *p1 = new PointLight(RGB(50.f, 50.f, 50.f), Point(0.f, 3.f, 0.f));
+
+    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f, 2.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
@@ -582,63 +619,45 @@ static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB con
 
 
 void CookTorranceScene (Scene& scene) {
-    RGB const Kd(0.1f, 0.1f, 0.1f); 
-    // cor difusa - É a cor base da esfera — a componente Lambert (difuso). 
-    // Independente do ângulo da câmara.
+    RGB const Ks(1.0f, 1.0f, 1.0f);
+    RGB const Ka(0.02f, 0.02f, 0.02f);
 
-    RGB const Ks(1.0f, 1.0f, 1.0f); 
-    // escala do especular
-    // Multiplicador que escala o resultado do Cook-Torrance especular. 
-    // (1,1,1) = sem escala, usa o F0 diretamente. 
-    // (0.5,0.5,0.5) cortaria o especular a metade. 
-    // No Cook-Torrance fisicamente correto, 
-    // Ks devia ser (1,1,1) — o F0 é que controla a intensidade.
+    // roughness=1.0 — fosco, cobre
+    int const ct_rough  = AddCookTorranceMat(scene, Ka,
+        RGB(0.1f, 0.05f, 0.02f), Ks, 1.0f, RGB(0.95f, 0.64f, 0.54f));
 
+    // roughness=0.05 — quasi-espelho, ouro
+    int const ct_mirror = AddCookTorranceMat(scene, Ka,
+        RGB(0.05f, 0.04f, 0.01f), Ks, 0.05f, RGB(1.00f, 0.71f, 0.29f));
 
-    RGB const F0(0.95f, 0.64f, 0.54f); // reflectância a 0° (Fresnel)
-    // É o valor de Fresnel à incidência normal (raio perpendicular à superfície). 
-    // Representa "quanto % da luz é refletida especularmente quando olhas diretamente 
-    // para a superfície":
-    // - 0.04 = plástico/vidro (4%) — especular muito fraco
-    // - 0.5 = semi-metal (50%)
-    // - 0.9 = metal (90%) — especular domina
-    // - (1.0, 0.71, 0.29) = ouro (cores diferentes por canal)
+    // roughness=0.5 — semi-brilhante, prata
+    int const ct_mid    = AddCookTorranceMat(scene, Ka,
+        RGB(0.15f, 0.15f, 0.15f), Ks, 0.5f, RGB(0.95f, 0.93f, 0.88f));
 
-    RGB const Ka(0.02f, 0.02f, 0.02f);  // 
+    // roughness=0.2 — plástico brilhante
+    int const ct_shiny  = AddCookTorranceMat(scene, Ka,
+        RGB(0.8f, 0.1f, 0.1f), Ks, 0.2f, RGB(0.04f, 0.04f, 0.04f));
 
+    // layout 2x2: [cubo | esfera] por célula
+    // linha de cima
+    AddBox   (scene, Point(-2.2f,  1.0f, 5.f), 0.6f, ct_rough);
+    AddSphere(scene, Point(-1.0f,  1.0f, 5.f), 0.6f, ct_rough);
 
-    // São os valores de roughness — 
-    // o parâmetro que controla a rugosidade microscópica da superfície.
-    // roughness=1.0 - superfície muito irregular - esfera parece fosca/mate, sem highlight visí
-    // roughness=0.5 - moderadamente irregular - highlight suave e largo
-    // roughness=0.2 - quase lisa - highlight nítido e médio
-    // roughness=0.05 - quase espelho perfeito - ponto muito brilhante e pequeno, quase espelho
-    
+    AddBox   (scene, Point( 1.0f,  1.0f, 5.f), 0.6f, ct_mirror);
+    AddSphere(scene, Point( 2.2f,  1.0f, 5.f), 0.6f, ct_mirror);
 
-    int const ct_rough  = AddCookTorranceMat(scene, Ka, Kd, Ks, 1.0f,  F0);
-    int const ct_mid    = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.5f,  F0);
-    int const ct_shiny  = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.2f,  F0);
-    int const ct_mirror = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.05f, F0);
+    // linha de baixo
+    AddBox   (scene, Point(-2.2f, -1.0f, 5.f), 0.6f, ct_mid);
+    AddSphere(scene, Point(-1.0f, -1.0f, 5.f), 0.6f, ct_mid);
 
-    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, ct_rough);
-    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, ct_mid);
-    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, ct_shiny);
-    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, ct_mirror);
+    AddBox   (scene, Point( 1.0f, -1.0f, 5.f), 0.6f, ct_shiny);
+    AddSphere(scene, Point( 2.2f, -1.0f, 5.f), 0.6f, ct_shiny);
 
     AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
-    // Iluminação global uniforme — ilumina todos os pontos da cena igualmente, 
-    // sem direção, sem sombras. 
-    // Simula luz indireta do ambiente. Valor baixo (0.02) 
-    // apenas evita que as zonas em sombra fiquem completamente pretas.
-
     scene.lights.push_back(ambient);
-    // Uma luz que emite em todas as direções a partir de um ponto. 
-    // A intensidade chega às esferas atenuada por 1/r² (quanto mais longe, mais fraca). 
-    // Valor 200 é alto para compensar a distância e a atenuação 1/r². 
-    // É a responsável pelo highlight especular.
-
     scene.numLights++;
-    PointLight *p1 = new PointLight(RGB(200.f, 200.f, 200.f), Point(0.f, 2.f, -1.f));
+
+    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f, 2.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
