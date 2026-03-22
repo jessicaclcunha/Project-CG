@@ -66,7 +66,7 @@ void CookTorranceCubeScene (Scene& scene) {
     AddBox(scene, Point( 1.f, 0.f, 3.f), 0.8f, ct_shiny);
     AddBox(scene, Point( 3.f, 0.f, 3.f), 0.8f, ct_mirror);
 
-    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
+    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.5f));
     scene.lights.push_back(ambient);
     scene.numLights++;
 
