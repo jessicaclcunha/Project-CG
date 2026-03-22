@@ -1,0 +1,4 @@
+build/
+RMSE/*.ppm
+*/.DS_Store
+.DS_Store

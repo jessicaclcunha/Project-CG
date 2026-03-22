@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRDF Material Library — GLSL</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --border: #2a2a40;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --text: #e8e8f0;
+    --muted: #6666aa;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  .logo span { color: var(--accent2); }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .upload-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    background: rgba(108,99,255,0.2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .upload-btn:hover { background: var(--accent); color: #fff; }
+
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    overflow: hidden;
+    height: calc(100vh - 49px);
+  }
+
+  /* LEFT PANEL */
+  .panel-left {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brdf-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+
+  .brdf-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .brdf-item:hover { background: var(--surface2); border-color: var(--border); }
+  .brdf-item.active { background: rgba(108,99,255,0.15); border-color: var(--accent); }
+
+  .brdf-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .brdf-item.active .brdf-name { color: var(--accent); }
+
+  .brdf-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent3);
+    margin-top: 3px;
+    opacity: 0.8;
+  }
+
+  /* CENTER */
+  .canvas-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #050508;
+  }
+
+  .canvas-toolbar {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: var(--surface);
+    font-size: 12px;
+  }
+
+  .view-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .view-btn:hover, .view-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
+
+  #glCanvas {
+    flex: 1;
+    width: 100%;
+    cursor: crosshair;
+    display: block;
+  }
+
+  .canvas-info {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .light-indicator {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent2);
+    pointer-events: none;
+  }
+
+  /* RIGHT PANEL */
+  .panel-right {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .param-group { margin-bottom: 20px; }
+
+  .param-row {
+    margin-bottom: 12px;
+  }
+
+  .param-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .param-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  .param-value {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 3px;
+    -webkit-appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    transition: transform 0.1s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+  .color-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .color-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  input[type=color] {
+    width: 36px;
+    height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: none;
+    cursor: pointer;
+    padding: 1px;
+  }
+
+  .shader-code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    line-height: 1.6;
+    color: #aaaacc;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-top: 8px;
+    white-space: pre;
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .num { color: #f78c6c; }
+  .cm { color: #546e7a; font-style: italic; }
+  .var { color: #eeffff; }
+  .op { color: #89ddff; }
+
+  .toggle-code {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: color 0.15s;
+  }
+
+  .toggle-code:hover { color: var(--accent); }
+
+  .separator {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BRDF<span>.</span>glsl</div>
+  <span class="tag">VI — Material Library</span>
+  <div class="header-right">
+    <button class="upload-btn" onclick="document.getElementById('imgUpload').click()">⬆ Upload Image / PPM</button>
+    <input type="file" id="imgUpload" accept="image/*,.ppm" style="display:none" onchange="loadUserImage(event)">
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- LEFT: BRDF SELECTOR -->
+  <div class="panel-left">
+    <div class="section-title">BRDF Models</div>
+    <div class="brdf-list" id="brdfList"></div>
+
+    <div class="section-title">Light Position</div>
+    <div class="param-row">
+      <div class="param-label"><span class="param-name">Light X</span><span class="param-value" id="lxVal">0.0</span></div>
+      <input type="range" id="lightX" min="-2" max="2" step="0.01" value="0.8" oninput="updateLight()">
+    </div>
+    <div class="param-row">
+      <div class="param-label"><span class="param-name">Light Y</span><span class="param-value" id="lyVal">0.0</span></div>
+      <input type="range" id="lightY" min="-2" max="2" step="0.01" value="1.0" oninput="updateLight()">
+    </div>
+    <div class="param-row">
+      <div class="param-label"><span class="param-name">Light Z</span><span class="param-value" id="lzVal">0.0</span></div>
+      <input type="range" id="lightZ" min="0.1" max="3" step="0.01" value="1.5" oninput="updateLight()">
+    </div>
+
+    <div class="color-row">
+      <span class="color-label">Light Color</span>
+      <input type="color" id="lightColor" value="#ffffff" onchange="updateLight()">
+    </div>
+    <div class="param-row">
+      <div class="param-label"><span class="param-name">Intensity</span><span class="param-value" id="liVal">1.0</span></div>
+      <input type="range" id="lightIntensity" min="0.1" max="5" step="0.05" value="1.5" oninput="updateLight()">
+    </div>
+
+    <hr class="separator">
+    <div class="section-title">Normal Map</div>
+    <div class="param-row">
+      <div class="param-label"><span class="param-name">Normal Strength</span><span class="param-value" id="nmVal">1.0</span></div>
+      <input type="range" id="normalStrength" min="0" max="3" step="0.05" value="1.0" oninput="updateParams()">
+    </div>
+    <div class="param-row">
+      <div class="param-label"><span class="param-name">Bump Scale</span><span class="param-value" id="bsVal">8</span></div>
+      <input type="range" id="bumpScale" min="1" max="32" step="1" value="8" oninput="updateParams()">
+    </div>
+    <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:6px;">
+      Normals derived from image luminance gradient (Sobel filter on GPU).
+    </div>
+  </div>
+
+  <!-- CENTER: WebGL Canvas -->
+  <div class="canvas-area">
+    <div class="canvas-toolbar">
+      <button class="view-btn active" id="btn-brdf" onclick="setView('brdf')">BRDF Result</button>
+      <button class="view-btn" id="btn-normals" onclick="setView('normals')">Normals</button>
+      <button class="view-btn" id="btn-diff" onclick="setView('diffuse')">Diffuse Only</button>
+      <button class="view-btn" id="btn-spec" onclick="setView('specular')">Specular Only</button>
+      <button class="view-btn" id="btn-original" onclick="setView('original')">Original</button>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)">
+        Click to move light · Drag to explore
+      </span>
+    </div>
+    <canvas id="glCanvas"></canvas>
+    <div class="canvas-info" id="canvasInfo">WebGL 2.0 · GLSL ES 3.0</div>
+    <div class="light-indicator" id="lightInfo">L(0.8, 1.0, 1.5)</div>
+  </div>
+
+  <!-- RIGHT: PARAMS + CODE -->
+  <div class="panel-right">
+    <div class="section-title">Parameters</div>
+    <div id="paramContainer"></div>
+
+    <hr class="separator">
+    <button class="toggle-code" onclick="toggleCode()">
+      <span id="codeToggleIcon">▶</span>
+      <span>GLSL Source</span>
+    </button>
+    <div id="shaderCodeBlock" style="display:none">
+      <div class="shader-code" id="shaderCode"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// BRDF DEFINITIONS
+// ============================================================
+const BRDFs = [
+  {
+    id: 'lambert',
+    name: 'Lambertian',
+    desc: 'Ideal diffuse, view-independent',
+    formula: 'f = Kd / π',
+    params: [
+      { id: 'kd', name: 'Kd (albedo)', min: 0, max: 1, step: 0.01, value: 0.8 },
+    ],
+    colorParams: [
+      { id: 'albedoColor', name: 'Albedo Color', value: '#ffffff' },
+    ],
+    glsl: `
+<span class="cm">// ─── Lambertian Diffuse BRDF ───────────────────────</span>
+<span class="cm">// f(wi,wo) = Kd / π</span>
+<span class="cm">// Radiance: L = f · Li · cos(θi)</span>
+
+<span class="kw">vec3</span> <span class="fn">brdf_lambert</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">L</span>, <span class="kw">vec3</span> <span class="var">albedo</span>) {
+    <span class="kw">float</span> <span class="var">NdotL</span> <span class="op">=</span> max(dot(<span class="var">N</span>, <span class="var">L</span>), <span class="num">0.0</span>);
+    <span class="kw">vec3</span>  <span class="var">f</span>     <span class="op">=</span> <span class="var">albedo</span> <span class="op">/</span> PI;
+    <span class="kw">return</span> <span class="var">f</span> <span class="op">*</span> <span class="var">NdotL</span>;
+}`,
+    fragExtra: `
+vec3 computeBRDF(vec3 N, vec3 L, vec3 V, vec3 albedo, vec3 tex) {
+    float NdotL = max(dot(N, L), 0.0);
+    vec3 Kd = albedo * tex * u_kd;
+    vec3 diff = Kd / PI;
+    return diff * NdotL;
+}`,
+  },
+
+  {
+    id: 'phong',
+    name: 'Phong',
+    desc: 'Diffuse + view-dependent specular lobe',
+    formula: 'f = Kd/π + Ks·(ns+2)/2π · (R·V)^ns',
+    params: [
+      { id: 'kd', name: 'Kd', min: 0, max: 1, step: 0.01, value: 0.6 },
+      { id: 'ks', name: 'Ks', min: 0, max: 1, step: 0.01, value: 0.5 },
+      { id: 'ns', name: 'ns (shininess)', min: 1, max: 512, step: 1, value: 32 },
+    ],
+    colorParams: [
+      { id: 'albedoColor', name: 'Diffuse Color', value: '#4488ff' },
+      { id: 'specColor', name: 'Specular Color', value: '#ffffff' },
+    ],
+    glsl: `
+<span class="cm">// ─── Phong BRDF ────────────────────────────────────</span>
+<span class="cm">// f = Kd/π  +  Ks·(ns+2)/(2π) · (R·V)^ns</span>
+<span class="cm">// R = 2(N·L)N − L  (perfect mirror of L)</span>
+
+<span class="kw">vec3</span> <span class="fn">brdf_phong</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">L</span>, <span class="kw">vec3</span> <span class="var">V</span>,
+               <span class="kw">vec3</span> <span class="var">Kd</span>, <span class="kw">vec3</span> <span class="var">Ks</span>, <span class="kw">float</span> <span class="var">ns</span>) {
+    <span class="kw">float</span> <span class="var">NdotL</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">L</span>), <span class="num">0.0</span>);
+    <span class="kw">vec3</span>  <span class="var">R</span>     <span class="op">=</span> reflect(<span class="op">-</span><span class="var">L</span>, <span class="var">N</span>);
+    <span class="kw">float</span> <span class="var">RdotV</span> <span class="op">=</span> max(dot(<span class="var">R</span>,<span class="var">V</span>), <span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">norm</span>  <span class="op">=</span> (<span class="var">ns</span><span class="op">+</span><span class="num">2.0</span>) <span class="op">/</span> (<span class="num">2.0</span><span class="op">*</span>PI);
+    <span class="kw">vec3</span>  <span class="var">spec</span>  <span class="op">=</span> <span class="var">Ks</span> <span class="op">*</span> <span class="var">norm</span> <span class="op">*</span> pow(<span class="var">RdotV</span>, <span class="var">ns</span>);
+    <span class="kw">return</span> (<span class="var">Kd</span><span class="op">/</span>PI <span class="op">+</span> <span class="var">spec</span>) <span class="op">*</span> <span class="var">NdotL</span>;
+}`,
+    fragExtra: `
+vec3 computeBRDF(vec3 N, vec3 L, vec3 V, vec3 albedo, vec3 tex) {
+    float NdotL = max(dot(N, L), 0.0);
+    vec3 Kd = albedo * tex * u_kd;
+    vec3 Ks = u_specColor * u_ks;
+    float ns = u_ns;
+    vec3 R = reflect(-L, N);
+    float RdotV = max(dot(R, V), 0.0);
+    float norm = (ns + 2.0) / (2.0 * PI);
+    vec3 diff = Kd / PI;
+    vec3 spec = Ks * norm * pow(RdotV, ns);
+    return (diff + spec) * NdotL;
+}`,
+  },
+
+  {
+    id: 'blinnphong',
+    name: 'Blinn-Phong',
+    desc: 'Half-vector formulation of Phong',
+    formula: 'f = Kd/π + Ks·(ns+8)/8π · (N·H)^ns',
+    params: [
+      { id: 'kd', name: 'Kd', min: 0, max: 1, step: 0.01, value: 0.6 },
+      { id: 'ks', name: 'Ks', min: 0, max: 1, step: 0.01, value: 0.6 },
+      { id: 'ns', name: 'ns (shininess)', min: 1, max: 512, step: 1, value: 64 },
+    ],
+    colorParams: [
+      { id: 'albedoColor', name: 'Diffuse Color', value: '#ff8844' },
+      { id: 'specColor', name: 'Specular Color', value: '#ffffff' },
+    ],
+    glsl: `
+<span class="cm">// ─── Blinn-Phong BRDF ──────────────────────────────</span>
+<span class="cm">// Uses half-vector H = normalize(L+V)</span>
+<span class="cm">// f = Kd/π  +  Ks·(ns+8)/(8π) · (N·H)^ns</span>
+
+<span class="kw">vec3</span> <span class="fn">brdf_blinnphong</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">L</span>, <span class="kw">vec3</span> <span class="var">V</span>,
+                    <span class="kw">vec3</span> <span class="var">Kd</span>, <span class="kw">vec3</span> <span class="var">Ks</span>, <span class="kw">float</span> <span class="var">ns</span>) {
+    <span class="kw">float</span> <span class="var">NdotL</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">L</span>), <span class="num">0.0</span>);
+    <span class="kw">vec3</span>  <span class="var">H</span>     <span class="op">=</span> normalize(<span class="var">L</span> <span class="op">+</span> <span class="var">V</span>);
+    <span class="kw">float</span> <span class="var">NdotH</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">H</span>), <span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">norm</span>  <span class="op">=</span> (<span class="var">ns</span><span class="op">+</span><span class="num">8.0</span>) <span class="op">/</span> (<span class="num">8.0</span><span class="op">*</span>PI);
+    <span class="kw">vec3</span>  <span class="var">spec</span>  <span class="op">=</span> <span class="var">Ks</span> <span class="op">*</span> <span class="var">norm</span> <span class="op">*</span> pow(<span class="var">NdotH</span>, <span class="var">ns</span>);
+    <span class="kw">return</span> (<span class="var">Kd</span><span class="op">/</span>PI <span class="op">+</span> <span class="var">spec</span>) <span class="op">*</span> <span class="var">NdotL</span>;
+}`,
+    fragExtra: `
+vec3 computeBRDF(vec3 N, vec3 L, vec3 V, vec3 albedo, vec3 tex) {
+    float NdotL = max(dot(N, L), 0.0);
+    vec3 Kd = albedo * tex * u_kd;
+    vec3 Ks = u_specColor * u_ks;
+    float ns = u_ns;
+    vec3 H = normalize(L + V);
+    float NdotH = max(dot(N, H), 0.0);
+    float norm = (ns + 8.0) / (8.0 * PI);
+    vec3 diff = Kd / PI;
+    vec3 spec = Ks * norm * pow(NdotH, ns);
+    return (diff + spec) * NdotL;
+}`,
+  },
+
+  {
+    id: 'cooktorrance',
+    name: 'Cook-Torrance (GGX)',
+    desc: 'Microfacet model: D·F·G / (4 NL·NV)',
+    formula: 'f = Kd/π + D·F·G / (4·NL·NV)',
+    params: [
+      { id: 'kd', name: 'Kd', min: 0, max: 1, step: 0.01, value: 0.3 },
+      { id: 'roughness', name: 'Roughness α', min: 0.02, max: 1, step: 0.01, value: 0.4 },
+      { id: 'metallic', name: 'Metallic', min: 0, max: 1, step: 0.01, value: 0.0 },
+      { id: 'f0', name: 'F0 (base reflectance)', min: 0, max: 1, step: 0.01, value: 0.04 },
+    ],
+    colorParams: [
+      { id: 'albedoColor', name: 'Albedo / Metal Color', value: '#cc4422' },
+    ],
+    glsl: `
+<span class="cm">// ─── Cook-Torrance Microfacet BRDF ─────────────────</span>
+<span class="cm">// D: GGX/Trowbridge-Reitz distribution</span>
+<span class="cm">// F: Schlick Fresnel approximation</span>
+<span class="cm">// G: Smith GGX masking-shadowing</span>
+
+<span class="kw">float</span> <span class="fn">D_GGX</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">H</span>, <span class="kw">float</span> <span class="var">a</span>) {
+    <span class="kw">float</span> <span class="var">a2</span>  <span class="op">=</span> <span class="var">a</span><span class="op">*</span><span class="var">a</span>;
+    <span class="kw">float</span> <span class="var">NH</span>  <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">H</span>), <span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">NH2</span> <span class="op">=</span> <span class="var">NH</span><span class="op">*</span><span class="var">NH</span>;
+    <span class="kw">float</span> <span class="var">d</span>   <span class="op">=</span> <span class="var">NH2</span><span class="op">*</span>(<span class="var">a2</span><span class="op">-</span><span class="num">1.0</span>)<span class="op">+</span><span class="num">1.0</span>;
+    <span class="kw">return</span> <span class="var">a2</span> <span class="op">/</span> (PI<span class="op">*</span><span class="var">d</span><span class="op">*</span><span class="var">d</span>);
+}
+<span class="kw">vec3</span> <span class="fn">F_Schlick</span>(<span class="kw">float</span> <span class="var">cosT</span>, <span class="kw">vec3</span> <span class="var">F0</span>) {
+    <span class="kw">return</span> <span class="var">F0</span><span class="op">+</span>(<span class="num">1.0</span><span class="op">-</span><span class="var">F0</span>)<span class="op">*</span>pow(<span class="num">1.0</span><span class="op">-</span><span class="var">cosT</span>,<span class="num">5.0</span>);
+}
+<span class="kw">float</span> <span class="fn">G_Smith</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">V</span>, <span class="kw">vec3</span> <span class="var">L</span>, <span class="kw">float</span> <span class="var">k</span>) {
+    <span class="kw">float</span> <span class="var">NV</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">V</span>),<span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">NL</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">L</span>),<span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">g1</span> <span class="op">=</span> <span class="var">NV</span><span class="op">/</span>(<span class="var">NV</span><span class="op">*</span>(<span class="num">1.0</span><span class="op">-</span><span class="var">k</span>)<span class="op">+</span><span class="var">k</span>);
+    <span class="kw">float</span> <span class="var">g2</span> <span class="op">=</span> <span class="var">NL</span><span class="op">/</span>(<span class="var">NL</span><span class="op">*</span>(<span class="num">1.0</span><span class="op">-</span><span class="var">k</span>)<span class="op">+</span><span class="var">k</span>);
+    <span class="kw">return</span> <span class="var">g1</span><span class="op">*</span><span class="var">g2</span>;
+}`,
+    fragExtra: `
+vec3 computeBRDF(vec3 N, vec3 L, vec3 V, vec3 albedo, vec3 tex) {
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0001);
+    vec3 H = normalize(L + V);
+    float a = u_roughness * u_roughness;
+    vec3 baseColor = albedo * tex;
+    vec3 F0 = mix(vec3(u_f0), baseColor, u_metallic);
+    // D - GGX
+    float a2 = a*a; float NH = max(dot(N,H),0.0); float NH2=NH*NH;
+    float dd = NH2*(a2-1.0)+1.0; float D = a2/(PI*dd*dd);
+    // F - Schlick
+    float cosT = max(dot(H,V),0.0);
+    vec3 F = F0 + (1.0-F0)*pow(1.0-cosT,5.0);
+    // G - Smith
+    float k = (a+1.0)*(a+1.0)/8.0;
+    float NV=NdotV; float NL=NdotL;
+    float g1=NV/(NV*(1.0-k)+k); float g2=NL/(NL*(1.0-k)+k); float G=g1*g2;
+    vec3 spec = (D*F*G)/(4.0*NdotV*NdotL+0.001);
+    vec3 kS = F; vec3 kD = (1.0-kS)*(1.0-u_metallic);
+    vec3 diff = kD * baseColor * u_kd / PI;
+    return (diff + spec) * NdotL;
+}`,
+  },
+
+  {
+    id: 'orennayar',
+    name: 'Oren-Nayar',
+    desc: 'Rough diffuse: microfacet Lambertian',
+    formula: 'f = Kd/π · (A + B·max(0,cos(φo-φi))·sinα·tanβ)',
+    params: [
+      { id: 'kd', name: 'Kd', min: 0, max: 1, step: 0.01, value: 0.9 },
+      { id: 'roughness', name: 'σ² (roughness)', min: 0, max: 1, step: 0.01, value: 0.5 },
+    ],
+    colorParams: [
+      { id: 'albedoColor', name: 'Diffuse Color', value: '#aa8866' },
+    ],
+    glsl: `
+<span class="cm">// ─── Oren-Nayar Diffuse BRDF ───────────────────────</span>
+<span class="cm">// Microfacet rough diffuse model</span>
+<span class="cm">// A = 1 - σ²/(2σ²+0.66)</span>
+<span class="cm">// B = 0.45·σ²/(σ²+0.09)</span>
+
+<span class="kw">vec3</span> <span class="fn">brdf_orennayar</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">L</span>, <span class="kw">vec3</span> <span class="var">V</span>,
+                   <span class="kw">vec3</span> <span class="var">Kd</span>, <span class="kw">float</span> <span class="var">sigma2</span>) {
+    <span class="kw">float</span> <span class="var">A</span> <span class="op">=</span> <span class="num">1.0</span> <span class="op">-</span> <span class="var">sigma2</span><span class="op">/</span>(<span class="num">2.0</span><span class="op">*</span><span class="var">sigma2</span><span class="op">+</span><span class="num">0.66</span>);
+    <span class="kw">float</span> <span class="var">B</span> <span class="op">=</span> <span class="num">0.45</span><span class="op">*</span><span class="var">sigma2</span><span class="op">/</span>(<span class="var">sigma2</span><span class="op">+</span><span class="num">0.09</span>);
+    <span class="kw">float</span> <span class="var">NL</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">L</span>),<span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">NV</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">V</span>),<span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">tI</span> <span class="op">=</span> acos(<span class="var">NL</span>), <span class="var">tO</span> <span class="op">=</span> acos(<span class="var">NV</span>);
+    <span class="kw">float</span> <span class="var">alpha</span> <span class="op">=</span> max(<span class="var">tI</span>,<span class="var">tO</span>), <span class="var">beta</span> <span class="op">=</span> min(<span class="var">tI</span>,<span class="var">tO</span>);
+    <span class="kw">vec3</span>  <span class="var">Lp</span> <span class="op">=</span> normalize(<span class="var">L</span><span class="op">-</span><span class="var">N</span><span class="op">*</span><span class="var">NL</span>);
+    <span class="kw">vec3</span>  <span class="var">Vp</span> <span class="op">=</span> normalize(<span class="var">V</span><span class="op">-</span><span class="var">N</span><span class="op">*</span><span class="var">NV</span>);
+    <span class="kw">float</span> <span class="var">c</span>  <span class="op">=</span> max(dot(<span class="var">Lp</span>,<span class="var">Vp</span>),<span class="num">0.0</span>);
+    <span class="kw">return</span> <span class="var">Kd</span><span class="op">/</span>PI<span class="op">*</span>(<span class="var">A</span><span class="op">+</span><span class="var">B</span><span class="op">*</span><span class="var">c</span><span class="op">*</span>sin(<span class="var">alpha</span>)<span class="op">*</span>tan(<span class="var">beta</span>))<span class="op">*</span><span class="var">NL</span>;
+}`,
+    fragExtra: `
+vec3 computeBRDF(vec3 N, vec3 L, vec3 V, vec3 albedo, vec3 tex) {
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0);
+    vec3 Kd = albedo * tex * u_kd;
+    float sigma2 = u_roughness * u_roughness;
+    float A = 1.0 - sigma2 / (2.0*sigma2 + 0.66);
+    float B = 0.45 * sigma2 / (sigma2 + 0.09);
+    float tI = acos(NdotL), tO = acos(NdotV);
+    float alpha = max(tI, tO), beta = min(tI, tO);
+    vec3 Lp = normalize(L - N*NdotL);
+    vec3 Vp = normalize(V - N*NdotV);
+    float c = max(dot(Lp, Vp), 0.0);
+    return Kd / PI * (A + B * c * sin(alpha) * tan(beta)) * NdotL;
+}`,
+  },
+
+  {
+    id: 'ashikhmin',
+    name: 'Ashikhmin-Shirley',
+    desc: 'Anisotropic specular: Nu ≠ Nv exponents',
+    formula: 'f = sqrt((nu+1)(nv+1))/8π · (N·H)^... / (H·L · max(NL,NV))',
+    params: [
+      { id: 'kd', name: 'Kd', min: 0, max: 1, step: 0.01, value: 0.4 },
+      { id: 'ks', name: 'Ks', min: 0, max: 1, step: 0.01, value: 0.6 },
+      { id: 'nu', name: 'nu (along U)', min: 1, max: 1000, step: 1, value: 100 },
+      { id: 'nv', name: 'nv (along V)', min: 1, max: 1000, step: 1, value: 10 },
+    ],
+    colorParams: [
+      { id: 'albedoColor', name: 'Diffuse Color', value: '#226688' },
+      { id: 'specColor', name: 'Specular Color', value: '#ffffff' },
+    ],
+    glsl: `
+<span class="cm">// ─── Ashikhmin-Shirley Anisotropic BRDF ────────────</span>
+<span class="cm">// Anisotropic specular with exponents nu (U) and nv (V)</span>
+<span class="cm">// f_s = sqrt((nu+1)(nv+1))/(8π)</span>
+<span class="cm">//     · (N·H)^(nu·hx²+nv·hy²)/(1-hz²) / (H·L·max(N·L,N·V))</span>
+
+<span class="kw">vec3</span> <span class="fn">brdf_ashikhmin</span>(<span class="kw">vec3</span> <span class="var">N</span>, <span class="kw">vec3</span> <span class="var">L</span>, <span class="kw">vec3</span> <span class="var">V</span>, <span class="kw">vec3</span> <span class="var">U</span>,
+                    <span class="kw">vec3</span> <span class="var">Kd</span>, <span class="kw">vec3</span> <span class="var">Ks</span>, <span class="kw">float</span> <span class="var">nu</span>, <span class="kw">float</span> <span class="var">nv</span>) {
+    <span class="kw">float</span> <span class="var">NL</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">L</span>),<span class="num">0.0</span>);
+    <span class="kw">float</span> <span class="var">NV</span> <span class="op">=</span> max(dot(<span class="var">N</span>,<span class="var">V</span>),<span class="num">0.0</span>);
+    <span class="cm">// diffuse component (Lambertian base)</span>
+    <span class="kw">vec3</span>  <span class="var">diff</span> <span class="op">=</span> (<span class="num">28.0</span><span class="op">*</span><span class="var">Kd</span><span class="op">/</span>(<span class="num">23.0</span><span class="op">*</span>PI)) <span class="op">*</span> (<span class="num">1.0</span><span class="op">-</span>pow(<span class="num">1.0</span><span class="op">-</span><span class="var">NL</span><span class="op">/</span><span class="num">2.0</span>,<span class="num">5.0</span>))
+               <span class="op">*</span> (<span class="num">1.0</span><span class="op">-</span>pow(<span class="num">1.0</span><span class="op">-</span><span class="var">NV</span><span class="op">/</span><span class="num">2.0</span>,<span class="num">5.0</span>));
+    <span class="kw">return</span> <span class="var">diff</span> <span class="op">*</span> <span class="var">NL</span>; <span class="cm">// spec requires full tangent frame</span>
+}`,
+    fragExtra: `
+vec3 computeBRDF(vec3 N, vec3 L, vec3 V, vec3 albedo, vec3 tex) {
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0001);
+    vec3 Kd = albedo * tex * u_kd;
+    vec3 Ks = u_specColor * u_ks;
+    // Ashikhmin-Shirley diffuse (full formula)
+    vec3 diff = (28.0*Kd/(23.0*PI))*(1.0-pow(1.0-NdotL/2.0,5.0))*(1.0-pow(1.0-NdotV/2.0,5.0));
+    // Approximate anisotropic specular via Blinn-Phong with avg exponent
+    float ns_avg = (u_nu + u_nv) * 0.5;
+    vec3 H = normalize(L + V);
+    float NdotH = max(dot(N, H), 0.0);
+    float norm = sqrt((u_nu+1.0)*(u_nv+1.0)) / (8.0*PI);
+    // Anisotropic: compute tangent/bitangent
+    vec3 T = normalize(cross(N, vec3(0.0,1.0,0.001)));
+    vec3 B = cross(N, T);
+    float HdotT = dot(H, T); float HdotB = dot(H, B); float HdotN = NdotH;
+    float exponent = (u_nu*HdotT*HdotT + u_nv*HdotB*HdotB) / max(1.0-HdotN*HdotN,0.0001);
+    vec3 F = Ks + (1.0-Ks)*pow(1.0-max(dot(H,L),0.0),5.0);
+    vec3 spec = norm * F * pow(NdotH, exponent) / max(max(NdotL,NdotV)*dot(H,L),0.001);
+    return (diff + spec) * NdotL;
+}`,
+  },
+];
+
+// ============================================================
+// WebGL Setup
+// ============================================================
+const canvas = document.getElementById('glCanvas');
+let gl, program, texture;
+let currentBRDF = 0;
+let currentView = 'brdf';
+let userImage = null;
+let isDragging = false;
+
+// Uniforms state
+let uniforms = {
+  lightPos: [0.8, 1.0, 1.5],
+  lightColor: [1, 1, 1],
+  lightIntensity: 1.5,
+  normalStrength: 1.0,
+  bumpScale: 8.0,
+  viewMode: 0,
+  params: {},
+};
+
+function initWebGL() {
+  gl = canvas.getContext('webgl2');
+  if (!gl) { alert('WebGL2 not supported'); return; }
+  buildAndRender();
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16)/255;
+  const g = parseInt(hex.slice(3,5),16)/255;
+  const b = parseInt(hex.slice(5,7),16)/255;
+  return [r, g, b];
+}
+
+function buildShader() {
+  const brdf = BRDFs[currentBRDF];
+
+  const vs = `#version 300 es
+precision highp float;
+in vec2 a_pos;
+out vec2 v_uv;
+void main() {
+  v_uv = a_pos * 0.5 + 0.5;
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}`;
+
+  // Build uniform declarations from params
+  const p = brdf.params || [];
+  const cp = brdf.colorParams || [];
+  let uniformDecls = '';
+  p.forEach(param => {
+    uniformDecls += `uniform float u_${param.id};\n`;
+  });
+  cp.forEach(cp => {
+    uniformDecls += `uniform vec3 u_${cp.id};\n`;
+  });
+
+  const fs = `#version 300 es
+precision highp float;
+
+in vec2 v_uv;
+out vec4 fragColor;
+
+uniform sampler2D u_tex;
+uniform vec3 u_lightPos;
+uniform vec3 u_lightColor;
+uniform float u_lightIntensity;
+uniform float u_normalStrength;
+uniform float u_bumpScale;
+uniform int u_viewMode;
+${uniformDecls}
+
+const float PI = 3.14159265359;
+
+// ─── Sobel Normal from Luminance ──────────────────────
+vec3 computeNormal(sampler2D tex, vec2 uv, float strength, float scale) {
+  vec2 texel = vec2(1.0) / vec2(textureSize(tex, 0)) * scale;
+  
+  float tl = dot(texture(tex, uv + vec2(-texel.x, -texel.y)).rgb, vec3(0.299,0.587,0.114));
+  float t  = dot(texture(tex, uv + vec2( 0.0,     -texel.y)).rgb, vec3(0.299,0.587,0.114));
+  float tr = dot(texture(tex, uv + vec2( texel.x, -texel.y)).rgb, vec3(0.299,0.587,0.114));
+  float l  = dot(texture(tex, uv + vec2(-texel.x,  0.0    )).rgb, vec3(0.299,0.587,0.114));
+  float r  = dot(texture(tex, uv + vec2( texel.x,  0.0    )).rgb, vec3(0.299,0.587,0.114));
+  float bl = dot(texture(tex, uv + vec2(-texel.x,  texel.y)).rgb, vec3(0.299,0.587,0.114));
+  float b  = dot(texture(tex, uv + vec2( 0.0,      texel.y)).rgb, vec3(0.299,0.587,0.114));
+  float br = dot(texture(tex, uv + vec2( texel.x,  texel.y)).rgb, vec3(0.299,0.587,0.114));
+
+  float sx = (-tl - 2.0*l - bl + tr + 2.0*r + br);
+  float sy = (-tl - 2.0*t - tr + bl + 2.0*b + br);
+  
+  return normalize(vec3(-sx * strength, -sy * strength, 1.0));
+}
+
+// ─── BRDF Implementation ──────────────────────────────
+${brdf.fragExtra}
+
+void main() {
+  vec3 tex = texture(u_tex, v_uv).rgb;
+  
+  // Surface normal from image (Sobel)
+  vec3 N = computeNormal(u_tex, v_uv, u_normalStrength, u_bumpScale);
+  
+  // View direction (orthographic from front)
+  vec3 V = normalize(vec3(0.0, 0.0, 1.0));
+  
+  // Light direction (from pixel to light, in tangent space)
+  vec3 fragPos = vec3(v_uv * 2.0 - 1.0, 0.0);
+  vec3 L = normalize(u_lightPos - fragPos);
+  
+  // Ambient
+  vec3 ambient = tex * 0.05;
+  
+  // BRDF result
+  vec3 brdfResult = computeBRDF(N, L, V, u_albedoColor, tex);
+  vec3 lit = u_lightColor * u_lightIntensity * brdfResult + ambient;
+
+  // View mode switching
+  if (u_viewMode == 0) {
+    fragColor = vec4(lit, 1.0);
+  } else if (u_viewMode == 1) {
+    // Normals visualization
+    fragColor = vec4(N * 0.5 + 0.5, 1.0);
+  } else if (u_viewMode == 2) {
+    // Diffuse only
+    float NdotL = max(dot(N, L), 0.0);
+    vec3 Kd = u_albedoColor * tex;
+    fragColor = vec4(Kd / PI * NdotL * u_lightIntensity, 1.0);
+  } else if (u_viewMode == 3) {
+    // Specular only
+    vec3 H = normalize(L + V);
+    float NdotH = max(dot(N, H), 0.0);
+    float ns_val = 32.0;
+    float spec = pow(NdotH, ns_val);
+    fragColor = vec4(vec3(spec) * u_lightIntensity, 1.0);
+  } else {
+    // Original
+    fragColor = vec4(tex, 1.0);
+  }
+}`;
+
+  return { vs, fs };
+}
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error('Shader error:', gl.getShaderInfoLog(s));
+    console.error(src);
+    return null;
+  }
+  return s;
+}
+
+function buildAndRender() {
+  resizeCanvas();
+
+  const { vs, fs } = buildShader();
+  const vert = compileShader(gl.VERTEX_SHADER, vs);
+  const frag = compileShader(gl.FRAGMENT_SHADER, fs);
+  if (!vert || !frag) return;
+
+  if (program) gl.deleteProgram(program);
+  program = gl.createProgram();
+  gl.attachShader(program, vert);
+  gl.attachShader(program, frag);
+  gl.linkProgram(program);
+
+  // Quad
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(program, 'a_pos');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  if (!texture) createDefaultTexture();
+
+  render();
+}
+
+function createDefaultTexture() {
+  texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Generate a nice procedural test image (stone-like)
+  const size = 512;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      // Voronoi-like noise approximation
+      let v = 0;
+      for (let k = 0; k < 8; k++) {
+        const px = Math.sin(k * 1.7 + x * 0.041) * 256;
+        const py = Math.cos(k * 2.3 + y * 0.037) * 256;
+        const d = Math.sqrt((px - x + 256) ** 2 + (py - y + 256) ** 2);
+        v += Math.sin(d * 0.05 + k) * 0.125;
+      }
+      v = (v + 1) * 0.5;
+      // Stone color palette
+      const r = 120 + v * 80;
+      const g = 110 + v * 75;
+      const b = 100 + v * 65;
+      data[i] = Math.min(255, r);
+      data[i+1] = Math.min(255, g);
+      data[i+2] = Math.min(255, b);
+      data[i+3] = 255;
+    }
+  }
+
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+
+function render() {
+  if (!program) return;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(program);
+
+  const brdf = BRDFs[currentBRDF];
+
+  // Set texture
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.uniform1i(gl.getUniformLocation(program, 'u_tex'), 0);
+
+  // Set light/global uniforms
+  const lLoc = gl.getUniformLocation(program, 'u_lightPos');
+  if (lLoc) gl.uniform3fv(lLoc, uniforms.lightPos);
+  const lcLoc = gl.getUniformLocation(program, 'u_lightColor');
+  if (lcLoc) gl.uniform3fv(lcLoc, uniforms.lightColor);
+  const liLoc = gl.getUniformLocation(program, 'u_lightIntensity');
+  if (liLoc) gl.uniform1f(liLoc, uniforms.lightIntensity);
+  const nsLoc = gl.getUniformLocation(program, 'u_normalStrength');
+  if (nsLoc) gl.uniform1f(nsLoc, uniforms.normalStrength);
+  const bsLoc = gl.getUniformLocation(program, 'u_bumpScale');
+  if (bsLoc) gl.uniform1f(bsLoc, uniforms.bumpScale);
+  const vmLoc = gl.getUniformLocation(program, 'u_viewMode');
+  if (vmLoc) gl.uniform1i(vmLoc, uniforms.viewMode);
+
+  // Set BRDF params
+  (brdf.params || []).forEach(param => {
+    const loc = gl.getUniformLocation(program, `u_${param.id}`);
+    if (loc) {
+      const el = document.getElementById(`param_${param.id}`);
+      if (el) gl.uniform1f(loc, parseFloat(el.value));
+    }
+  });
+
+  // Set color params
+  (brdf.colorParams || []).forEach(cp => {
+    const loc = gl.getUniformLocation(program, `u_${cp.id}`);
+    if (loc) {
+      const el = document.getElementById(`cparam_${cp.id}`);
+      const rgb = el ? hexToRgb(el.value) : [1,1,1];
+      gl.uniform3fv(loc, rgb);
+    }
+  });
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+// ============================================================
+// UI Building
+// ============================================================
+function buildBRDFList() {
+  const list = document.getElementById('brdfList');
+  list.innerHTML = '';
+  BRDFs.forEach((b, i) => {
+    const el = document.createElement('div');
+    el.className = `brdf-item${i === currentBRDF ? ' active' : ''}`;
+    el.innerHTML = `<div class="brdf-name">${b.name}</div>
+      <div class="brdf-desc">${b.desc}</div>
+      <div class="formula">${b.formula}</div>`;
+    el.onclick = () => { currentBRDF = i; selectBRDF(i); };
+    list.appendChild(el);
+  });
+}
+
+function buildParams() {
+  const brdf = BRDFs[currentBRDF];
+  const container = document.getElementById('paramContainer');
+  container.innerHTML = '';
+
+  // Float params
+  (brdf.params || []).forEach(param => {
+    const div = document.createElement('div');
+    div.className = 'param-row';
+    div.innerHTML = `
+      <div class="param-label">
+        <span class="param-name">${param.name}</span>
+        <span class="param-value" id="val_${param.id}">${param.value.toFixed(2)}</span>
+      </div>
+      <input type="range" id="param_${param.id}" min="${param.min}" max="${param.max}" step="${param.step}" value="${param.value}"
+        oninput="document.getElementById('val_${param.id}').textContent=parseFloat(this.value).toFixed(2); render()">
+    `;
+    container.appendChild(div);
+  });
+
+  // Color params
+  (brdf.colorParams || []).forEach(cp => {
+    const div = document.createElement('div');
+    div.className = 'color-row';
+    div.innerHTML = `
+      <span class="color-label">${cp.name}</span>
+      <input type="color" id="cparam_${cp.id}" value="${cp.value}" onchange="render()">
+    `;
+    container.appendChild(div);
+  });
+
+  // Shader code
+  document.getElementById('shaderCode').innerHTML = brdf.glsl;
+}
+
+function selectBRDF(i) {
+  currentBRDF = i;
+  buildBRDFList();
+  buildParams();
+  buildAndRender();
+}
+
+function setView(mode) {
+  currentView = mode;
+  const map = { brdf: 0, normals: 1, diffuse: 2, specular: 3, original: 4 };
+  uniforms.viewMode = (mode in map) ? map[mode] : 0;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`btn-${mode}`);
+  if (btn) btn.classList.add('active');
+  render();
+}
+
+function updateLight() {
+  uniforms.lightPos[0] = parseFloat(document.getElementById('lightX').value);
+  uniforms.lightPos[1] = parseFloat(document.getElementById('lightY').value);
+  uniforms.lightPos[2] = parseFloat(document.getElementById('lightZ').value);
+  uniforms.lightColor = hexToRgb(document.getElementById('lightColor').value);
+  uniforms.lightIntensity = parseFloat(document.getElementById('lightIntensity').value);
+  document.getElementById('lxVal').textContent = uniforms.lightPos[0].toFixed(2);
+  document.getElementById('lyVal').textContent = uniforms.lightPos[1].toFixed(2);
+  document.getElementById('lzVal').textContent = uniforms.lightPos[2].toFixed(2);
+  document.getElementById('liVal').textContent = uniforms.lightIntensity.toFixed(2);
+  document.getElementById('lightInfo').textContent =
+    `L(${uniforms.lightPos[0].toFixed(1)}, ${uniforms.lightPos[1].toFixed(1)}, ${uniforms.lightPos[2].toFixed(1)})`;
+  render();
+}
+
+function updateParams() {
+  uniforms.normalStrength = parseFloat(document.getElementById('normalStrength').value);
+  uniforms.bumpScale = parseFloat(document.getElementById('bumpScale').value);
+  document.getElementById('nmVal').textContent = uniforms.normalStrength.toFixed(2);
+  document.getElementById('bsVal').textContent = uniforms.bumpScale.toFixed(0);
+  render();
+}
+
+function toggleCode() {
+  const block = document.getElementById('shaderCodeBlock');
+  const icon = document.getElementById('codeToggleIcon');
+  const visible = block.style.display !== 'none';
+  block.style.display = visible ? 'none' : 'block';
+  icon.textContent = visible ? '▶' : '▼';
+}
+
+function loadPPMFromArrayBuffer(buf, filename) {
+  const bytes = new Uint8Array(buf);
+  let i = 0;
+  const readLine = () => {
+    let line = '';
+    while (i < bytes.length) {
+      const c = String.fromCharCode(bytes[i++]);
+      if (c === '\n') break;
+      line += c;
+    }
+    if (line.startsWith('#')) return readLine();
+    return line.trim();
+  };
+  const magic = readLine();
+  if (magic !== 'P6') { alert('Apenas PPM P6 (binary) suportado'); return; }
+  const dims = readLine().split(/\s+/);
+  const W = parseInt(dims[0]);
+  const H = parseInt(dims[1]);
+  readLine(); // maxval
+  const pixelData = new Uint8Array(buf, i);
+  const rgba = new Uint8Array(W * H * 4);
+  for (let p = 0; p < W * H; p++) {
+    rgba[p*4+0] = pixelData[p*3+0];
+    rgba[p*4+1] = pixelData[p*3+1];
+    rgba[p*4+2] = pixelData[p*3+2];
+    rgba[p*4+3] = 255;
+  }
+  uploadToTexture(rgba, W, H, filename);
+}
+
+function loadUserImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.name.toLowerCase().endsWith('.ppm')) {
+    const reader = new FileReader();
+    reader.onload = (e) => loadPPMFromArrayBuffer(e.target.result, file.name);
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const oc = document.createElement('canvas');
+        oc.width = img.width; oc.height = img.height;
+        oc.getContext('2d').drawImage(img, 0, 0);
+        const rgba = oc.getContext('2d').getImageData(0, 0, img.width, img.height).data;
+        uploadToTexture(new Uint8Array(rgba.buffer), img.width, img.height, file.name);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function uploadToTexture(rgba, W, H, filename) {
+  if (texture) gl.deleteTexture(texture);
+  texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  // PPM origin is top-left (same as image files) — flip Y for WebGL
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  document.getElementById('canvasInfo').textContent =
+    `WebGL 2.0 · ${W}×${H} · ${filename}`;
+  render();
+}
+
+// Mouse interaction: click to set light XY
+canvas.addEventListener('mousedown', (e) => { isDragging = true; moveLightFromMouse(e); });
+canvas.addEventListener('mousemove', (e) => { if (isDragging) moveLightFromMouse(e); });
+canvas.addEventListener('mouseup', () => { isDragging = false; });
+canvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+function moveLightFromMouse(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+  uniforms.lightPos[0] = x * 1.5;
+  uniforms.lightPos[1] = y * 1.5;
+  document.getElementById('lightX').value = uniforms.lightPos[0];
+  document.getElementById('lightY').value = uniforms.lightPos[1];
+  updateLight();
+}
+
+function resizeCanvas() {
+  const area = canvas.parentElement;
+  const toolbar = area.querySelector('.canvas-toolbar');
+  canvas.width = area.clientWidth;
+  canvas.height = area.clientHeight - toolbar.clientHeight;
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (gl && program) render();
+});
+
+// Init
+buildBRDFList();
+buildParams();
+initWebGL();
+updateLight();
+
+// Auto-load reference.ppm when served via HTTP (make view)
+async function tryAutoLoadPPM() {
+  const info = document.getElementById('canvasInfo');
+  const params = new URLSearchParams(window.location.search);
+  const ppmPath = params.get('ppm') || 'reference.ppm';
+  try {
+    info.textContent = `A carregar ${ppmPath}...`;
+    const resp = await fetch(ppmPath);
+    if (!resp.ok) {
+      info.textContent = `WebGL 2.0 · sem imagem (${ppmPath} não encontrado)`;
+      return;
+    }
+    const buf = await resp.arrayBuffer();
+    loadPPMFromArrayBuffer(buf, ppmPath);
+  } catch(e) {
+    info.textContent = 'WebGL 2.0 · abrir via "make view" para auto-carregar PPM';
+  }
+}
+if (window.location.protocol !== 'file:') {
+  tryAutoLoadPPM();
+}
+</script>
+</body>
+</html>

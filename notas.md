@@ -1,0 +1,5 @@
+- As texturas são para ser colocadas nas formas e terá que funcionar como se fossem o objeto normal
+- O mesmo objeto/forma (por exemplo: esfera) podem ter uma parte metálica e a outra não. Ou seja, diferentes "BRDFs" na mesma forma
+- Testar com diferentes formas, sem ser esfera
+- Melhorar a fórmula por trás do CookTorrance - Não usar F0, ser autocalculado.
+- Implementar BRDFs mais complexas, com mts parametros, para brincar com elas.
