@@ -23,9 +23,9 @@
 #### Semana 1: Melhorias CookTorrance + Formas Não-Esfera (March 16 to 22)
 
 **Membro A:**
-* [ ] Melhorar CookTorrance: remover F0 como parâmetro manual.
-* [ ] Calcular F0 a partir de metallic + albedo (workflow PBR).
-* [ ] Testar com materiais: plástico, ouro, cobre, borracha.
+* [✔️] Melhorar CookTorrance: remover F0 como parâmetro manual.
+* [✔️] Calcular F0 a partir de metallic + albedo (workflow PBR).
+* [✔️] Testar com materiais: plástico, ouro, cobre, borracha.
 
 **Membro B:**
 * [✔️] Criar `AddBox()` com triângulos (cubo).

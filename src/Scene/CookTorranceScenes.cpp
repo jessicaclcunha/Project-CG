@@ -56,9 +56,9 @@ void CookTorranceCubeScene (Scene& scene) {
     RGB const Ka(0.02f, 0.02f, 0.02f);
     float const metallic = 1.0f;
 
-    int const ct_rough  = AddCookTorranceMat(scene, Ka, Kd, Ks, 1.0f,  metallic);
-    int const ct_mid    = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.5f,  metallic);
-    int const ct_shiny  = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.2f,  metallic);
+    int const ct_rough  = AddCookTorranceMat(scene, Ka, Kd, Ks, 1.0f, metallic);
+    int const ct_mid    = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.5f, metallic);
+    int const ct_shiny  = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.2f, metallic);
     int const ct_mirror = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.05f, metallic);
 
     AddBox(scene, Point(-3.f, 0.f, 3.f), 0.8f, ct_rough);
@@ -66,7 +66,7 @@ void CookTorranceCubeScene (Scene& scene) {
     AddBox(scene, Point( 1.f, 0.f, 3.f), 0.8f, ct_shiny);
     AddBox(scene, Point( 3.f, 0.f, 3.f), 0.8f, ct_mirror);
 
-    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.5f));
+    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
     scene.lights.push_back(ambient);
     scene.numLights++;
 
