@@ -99,9 +99,10 @@ void CookTorranceCubeScene (Scene& scene) {
     int const matB = AddCookTorranceMat(scene, Ka, KdB, Ks, roughB, metalB);
 
     // Da diagonal (3,3,-3) vê-se front, right, top
+    // front=plástico (difuso claro), right=ouro, top=ouro (apanha AreaLight)
     //                          front, back, left,  right, bottom, top
     AddBoxMultiMat(scene, Point(0.f, 0.f, 3.f), 0.8f,
-                   matA, matB, matB, matB, matB, matA);
+                   matB, matA, matA, matA, matB, matA);
 
     // Chão cinzento
     int const ground = AddDiffuseMat(scene, RGB(0.4f, 0.4f, 0.4f));
@@ -121,6 +122,11 @@ void CookTorranceCubeScene (Scene& scene) {
     AreaLight *a2 = new AreaLight(RGB(80.f, 80.f, 80.f),
         Point(-2.f, 3.f, 1.f), Point(2.f, 3.f, 5.f), Point(-2.f, 3.f, 5.f), lightN);
     scene.lights.push_back(a2);
+    scene.numLights++;
+
+    // Fill light lateral — revela Fresnel rasante nas faces metálicas
+    PointLight *fill = new PointLight(RGB(30.f, 30.f, 30.f), Point(-3.f, 1.f, 0.f));
+    scene.lights.push_back(fill);
     scene.numLights++;
 }
 
