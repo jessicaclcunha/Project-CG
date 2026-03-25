@@ -8,12 +8,12 @@
 #include "BuildScenes.hpp"
 #include "SceneHelpers.hpp"
 
-static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, float const metallic) {
+static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, float const metallic, RGB const Ks_mirror = RGB(0.f, 0.f, 0.f)) {
     CookTorrance *brdf = new CookTorrance;
     brdf->Ka = Ka;
     brdf->Kd = Kd;
-    brdf->Ks      = RGB(0., 0., 0.);
-    brdf->Ks_brdf = Ks;
+    brdf->Ks      = Ks_mirror;   // raios de reflexão mirror (shader)
+    brdf->Ks_brdf = Ks;          // especular GGX (BRDF)
     brdf->Kt = RGB(0., 0., 0.);
     brdf->roughness = roughness;
     brdf->metallic  = metallic;
@@ -50,28 +50,77 @@ void CookTorranceSphereScene (Scene& scene) {
 }
 
 void CookTorranceCubeScene (Scene& scene) {
-    // COBRE: metal condutor — F0 = Kd (albedo tintado), metallic=1.0
-    RGB const Kd(0.95f, 0.64f, 0.54f);
+    // ====== MATERIAIS DAS FACES — descomentar/trocar à vontade ======
     RGB const Ks(1.0f, 1.0f, 1.0f);
     RGB const Ka(0.02f, 0.02f, 0.02f);
-    float const metallic = 1.0f;
 
-    int const ct_rough  = AddCookTorranceMat(scene, Ka, Kd, Ks, 1.0f, metallic);
-    int const ct_mid    = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.5f, metallic);
-    int const ct_shiny  = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.2f, metallic);
-    int const ct_mirror = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.05f, metallic);
+    // --- Face A: metal (sem Ks_mirror — especular vem do GGX via AreaLight) ---
 
-    AddBox(scene, Point(-3.f, 0.f, 3.f), 0.8f, ct_rough);
-    AddBox(scene, Point(-1.f, 0.f, 3.f), 0.8f, ct_mid);
-    AddBox(scene, Point( 1.f, 0.f, 3.f), 0.8f, ct_shiny);
-    AddBox(scene, Point( 3.f, 0.f, 3.f), 0.8f, ct_mirror);
+    /* OURO: metal condutor */
+    RGB   const KdA(1.00f, 0.71f, 0.29f);
+    float const roughA = 0.3f;
+    float const metalA = 1.0f;
+
+    /* PRATA: metal condutor
+    RGB   const KdA(0.95f, 0.93f, 0.88f);
+    float const roughA = 0.15f;
+    float const metalA = 1.0f;
+    */
+    /* COBRE: metal condutor
+    RGB   const KdA(0.95f, 0.64f, 0.54f);
+    float const roughA = 0.2f;
+    float const metalA = 1.0f;
+    */
+
+    // --- Face B: dielétrico ---
+
+    /* PLÁSTICO VERMELHO: dielétrico */
+    RGB   const KdB(0.8f,  0.1f,  0.1f);
+    float const roughB = 0.3f;
+    float const metalB = 0.0f;
+
+    /* CERÂMICA AZUL: dielétrico
+    RGB   const KdB(0.1f,  0.2f,  0.6f);
+    float const roughB = 0.4f;
+    float const metalB = 0.0f;
+    */
+    /* BORRACHA: dielétrico
+    RGB   const KdB(0.02f, 0.02f, 0.02f);
+    float const roughB = 0.9f;
+    float const metalB = 0.0f;
+    */
+    /* SAFIRA: dielétrico
+    RGB   const KdB(0.01f, 0.02f, 0.35f);
+    float const roughB = 0.2f;
+    float const metalB = 0.0f;
+    */
+
+    int const matA = AddCookTorranceMat(scene, Ka, KdA, Ks, roughA, metalA);
+    int const matB = AddCookTorranceMat(scene, Ka, KdB, Ks, roughB, metalB);
+
+    // Da diagonal (3,3,-3) vê-se front, right, top
+    //                          front, back, left,  right, bottom, top
+    AddBoxMultiMat(scene, Point(0.f, 0.f, 3.f), 0.8f,
+                   matA, matB, matB, matB, matB, matA);
+
+    // Chão cinzento
+    int const ground = AddDiffuseMat(scene, RGB(0.4f, 0.4f, 0.4f));
+    AddTriangle(scene, Point(-5.f,-0.8f,-5.f), Point(5.f,-0.8f,-5.f), Point(5.f,-0.8f,10.f), ground);
+    AddTriangle(scene, Point(-5.f,-0.8f,-5.f), Point(5.f,-0.8f,10.f), Point(-5.f,-0.8f,10.f), ground);
 
     AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
     scene.lights.push_back(ambient);
     scene.numLights++;
 
-    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(0.f, 2.f, 0.f));
-    scene.lights.push_back(p1);
+    // Painel de luz rectangular (AreaLight) — highlight largo para GGX
+    Vector lightN(0.f, -1.f, 0.f);
+    AreaLight *a1 = new AreaLight(RGB(80.f, 80.f, 80.f),
+        Point(-2.f, 3.f, 1.f), Point(2.f, 3.f, 1.f), Point(2.f, 3.f, 5.f), lightN);
+    scene.lights.push_back(a1);
+    scene.numLights++;
+    AreaLight *a2 = new AreaLight(RGB(80.f, 80.f, 80.f),
+        Point(-2.f, 3.f, 1.f), Point(2.f, 3.f, 5.f), Point(-2.f, 3.f, 5.f), lightN);
+    scene.lights.push_back(a2);
     scene.numLights++;
 }
 

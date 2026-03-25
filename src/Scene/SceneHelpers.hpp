@@ -114,4 +114,34 @@ static inline void AddBox(Scene& scene,
     AddTriangle(scene, Point(x0,y1,z0), Point(x1,y1,z1), Point(x0,y1,z1), mat_ndx);
 }
 
+static inline void AddBoxMultiMat(Scene& scene,
+                                   Point const center, float const half,
+                                   int const mat_front, int const mat_back,
+                                   int const mat_left,  int const mat_right,
+                                   int const mat_bottom, int const mat_top)
+{
+    float x0 = center.X - half, x1 = center.X + half;
+    float y0 = center.Y - half, y1 = center.Y + half;
+    float z0 = center.Z - half, z1 = center.Z + half;
+
+    // Face frontal  (z = z0, normal -Z)
+    AddTriangle(scene, Point(x0,y0,z0), Point(x1,y0,z0), Point(x1,y1,z0), mat_front);
+    AddTriangle(scene, Point(x0,y0,z0), Point(x1,y1,z0), Point(x0,y1,z0), mat_front);
+    // Face traseira (z = z1, normal +Z)
+    AddTriangle(scene, Point(x1,y0,z1), Point(x0,y0,z1), Point(x0,y1,z1), mat_back);
+    AddTriangle(scene, Point(x1,y0,z1), Point(x0,y1,z1), Point(x1,y1,z1), mat_back);
+    // Face esquerda (x = x0, normal -X)
+    AddTriangle(scene, Point(x0,y0,z1), Point(x0,y0,z0), Point(x0,y1,z0), mat_left);
+    AddTriangle(scene, Point(x0,y0,z1), Point(x0,y1,z0), Point(x0,y1,z1), mat_left);
+    // Face direita  (x = x1, normal +X)
+    AddTriangle(scene, Point(x1,y0,z0), Point(x1,y0,z1), Point(x1,y1,z1), mat_right);
+    AddTriangle(scene, Point(x1,y0,z0), Point(x1,y1,z1), Point(x1,y1,z0), mat_right);
+    // Face inferior (y = y0, normal -Y)
+    AddTriangle(scene, Point(x0,y0,z1), Point(x1,y0,z1), Point(x1,y0,z0), mat_bottom);
+    AddTriangle(scene, Point(x0,y0,z1), Point(x1,y0,z0), Point(x0,y0,z0), mat_bottom);
+    // Face superior (y = y1, normal +Y)
+    AddTriangle(scene, Point(x0,y1,z0), Point(x1,y1,z0), Point(x1,y1,z1), mat_top);
+    AddTriangle(scene, Point(x0,y1,z0), Point(x1,y1,z1), Point(x0,y1,z1), mat_top);
+}
+
 #endif /* SceneHelpers_hpp */
