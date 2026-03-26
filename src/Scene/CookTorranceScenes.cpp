@@ -192,51 +192,57 @@ void CookTorranceJustOneThing (Scene& scene) {
     scene.numLights++;
 }
 
-/*
-static int AddCookTorranceTexMat (Scene& scene, std::string filename, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, float const metallic) {
+static int AddCookTorranceTexMat (Scene& scene, std::string filename,
+                                   RGB const Ka, RGB const Kd, RGB const Ks,
+                                   float const roughness, float const metallic) {
     CookTorranceTexture *brdf = new CookTorranceTexture(filename);
-    brdf->Ka = Ka;
-    brdf->Kd = Kd;
-    brdf->Ks      = RGB(0., 0., 0.);  // sem raios de espelho
-    brdf->Ks_brdf = Ks;               // especular do BRDF
-    brdf->Kt = RGB(0., 0., 0.);
+    brdf->Ka        = Ka;
+    brdf->Kd        = Kd;
+    brdf->Ks        = RGB(0., 0., 0.);  // sem raios de espelho
+    brdf->Ks_brdf   = Ks;               // especular GGX (BRDF)
+    brdf->Kt        = RGB(0., 0., 0.);
     brdf->roughness = roughness;
-    brdf->metallic  = metallic;
+    brdf->metallic  = metallic;       
     return (scene.AddMaterial(brdf));
 }
 
-// 3 esferas: sem textura (referência), Dog.ppm, UMinho.ppm — especular Cook-Torrance
 void CookTorranceTextureScene (Scene& scene) {
-    int const plain = AddCookTorranceMat(scene,
+    // plástico vermelho dielétrico — metallic=0.0 → F0=0.04 calculado no BRDF
+    RGB const Ks(1.0f, 1.0f, 1.0f);
+    float const roughness = 0.3f;
+    float const metallic  = 0.5f;  // dielétrico
+
+    int const plain_ct = AddCookTorranceMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
         RGB(0.6f, 0.2f, 0.2f),
-        RGB(1.0f, 1.0f, 1.0f),
-        0.3f,
-        RGB(0.04f, 0.04f, 0.04f));
+        Ks, roughness, metallic);
 
-    int const tex_dog = AddCookTorranceTexMat(scene, "Dog.ppm",
+    int const tex_dog_ct = AddCookTorranceTexMat(scene, "Dog.ppm",
         RGB(0.05f, 0.05f, 0.05f),
         RGB(1.0f, 1.0f, 1.0f),
-        RGB(1.0f, 1.0f, 1.0f),
-        0.3f,
-        RGB(0.04f, 0.04f, 0.04f));
+        Ks, roughness, metallic);
 
-    int const tex_um = AddCookTorranceTexMat(scene, "UMinho.ppm",
+    int const tex_um_ct = AddCookTorranceTexMat(scene, "UMinho.ppm",
         RGB(0.05f, 0.05f, 0.05f),
         RGB(1.0f, 1.0f, 1.0f),
-        RGB(1.0f, 1.0f, 1.0f),
-        0.3f,
-        RGB(0.04f, 0.04f, 0.04f));
+        Ks, roughness, metallic);
 
-    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, plain);
-    AddSphere(scene, Point( 0.f, 0.f, 5.f), 0.8f, tex_dog);
-    AddSphere(scene, Point( 2.f, 0.f, 5.f), 0.8f, tex_um);
+    // linha de cima: esferas
+    AddSphere(scene, Point(-2.f, 0.8f, 5.f), 0.7f, plain_ct);
+    AddSphere(scene, Point( 0.f, 0.8f, 5.f), 0.7f, tex_dog_ct);
+    AddSphere(scene, Point( 2.f, 0.8f, 5.f), 0.7f, tex_um_ct);
 
-    AmbientLight *ambient = new AmbientLight(RGB(0.1f, 0.1f, 0.1f));
+    // linha de baixo: cubos com UV mapping
+    AddBoxUV(scene, Point(-2.f, -0.8f, 5.f), 0.55f, plain_ct);
+    AddBoxUV(scene, Point( 0.f, -0.8f, 5.f), 0.55f, tex_dog_ct);
+    AddBoxUV(scene, Point( 2.f, -0.8f, 5.f), 0.55f, tex_um_ct);
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.08f, 0.08f, 0.08f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    PointLight *p1 = new PointLight(RGB(80.f, 80.f, 80.f), Point(0.f, 3.f, 0.f));
+
+    PointLight *p1 = new PointLight(RGB(200.f, 200.f, 200.f),
+                                     Point(-1.f, 3.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
-*/
