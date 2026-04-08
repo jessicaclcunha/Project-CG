@@ -53,11 +53,10 @@
 * [✔️] Adicionar Oren-Nayar ao `brdf_viewer`.
 
 **Membro B:**
-* [ ] Gerar renders comparativos (Phong vs CookTorrance vs Oren-Nayar).
-* [ ] Organizar imagens de teste.
-* [ ] Documentar melhorias feitas no CookTorrance.
-* [ ] Início da estrutura do relatório.
-
+* [ ] Implementar `Ward.hpp`.
+* [ ] Parâmetros: αx, αy (roughness anisotrópica).
+* [ ] Criar `WardScene` com variação anisotrópica.
+* [ ] Adicionar ao `brdf_viewer`.
 ---
 
 ### FASE 2 — BRDFs Avançadas
@@ -69,11 +68,13 @@
 * [ ] Implementar subsurface, metallic, specular, specularTint.
 * [ ] Criar `DisneyBRDF.hpp` com parâmetros base.
 
+
 **Membro B:**
-* [ ] Implementar `Ward.hpp`.
-* [ ] Parâmetros: αx, αy (roughness anisotrópica).
-* [ ] Criar `WardScene` com variação anisotrópica.
-* [ ] Adicionar ao `brdf_viewer`.
+* [ ] Gerar renders comparativos (Phong vs CookTorrance vs Oren-Nayar).
+* [ ] Organizar imagens de teste.
+* [ ] Documentar melhorias feitas no CookTorrance.
+* [ ] Início da estrutura do relatório.
+
 
 #### Semana 5: Disney Principled (Parte 2) + Ashikhmin-Shirley (April 13 to 19)
 
