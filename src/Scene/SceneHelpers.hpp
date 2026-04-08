@@ -114,6 +114,70 @@ static inline void AddBox(Scene& scene,
     AddTriangle(scene, Point(x0,y1,z0), Point(x1,y1,z1), Point(x0,y1,z1), mat_ndx);
 }
 
+
+static void AddBoxUV(Scene& scene,
+                     Point const center, float const half,
+                     int const mat_ndx)
+{
+    float x0 = center.X - half, x1 = center.X + half;
+    float y0 = center.Y - half, y1 = center.Y + half;
+    float z0 = center.Z - half, z1 = center.Z + half;
+ 
+    // Face frontal (z = z0, normal -Z)
+    // u: x0→x1 = 0→1 ; v: y0→y1 = 0→1
+    AddTriangleUV(scene,
+        Point(x0,y0,z0), Point(x1,y0,z0), Point(x1,y1,z0),
+        Vec2(0,0), Vec2(1,0), Vec2(1,1), mat_ndx);
+    AddTriangleUV(scene,
+        Point(x0,y0,z0), Point(x1,y1,z0), Point(x0,y1,z0),
+        Vec2(0,0), Vec2(1,1), Vec2(0,1), mat_ndx);
+ 
+    // Face traseira (z = z1, normal +Z)
+    // u: x1→x0 = 0→1 (espelhado para consistência de orientação)
+    AddTriangleUV(scene,
+        Point(x1,y0,z1), Point(x0,y0,z1), Point(x0,y1,z1),
+        Vec2(0,0), Vec2(1,0), Vec2(1,1), mat_ndx);
+    AddTriangleUV(scene,
+        Point(x1,y0,z1), Point(x0,y1,z1), Point(x1,y1,z1),
+        Vec2(0,0), Vec2(1,1), Vec2(0,1), mat_ndx);
+ 
+    // Face esquerda (x = x0, normal -X)
+    // u: z1→z0 = 0→1 ; v: y0→y1 = 0→1
+    AddTriangleUV(scene,
+        Point(x0,y0,z1), Point(x0,y0,z0), Point(x0,y1,z0),
+        Vec2(0,0), Vec2(1,0), Vec2(1,1), mat_ndx);
+    AddTriangleUV(scene,
+        Point(x0,y0,z1), Point(x0,y1,z0), Point(x0,y1,z1),
+        Vec2(0,0), Vec2(1,1), Vec2(0,1), mat_ndx);
+ 
+    // Face direita (x = x1, normal +X)
+    // u: z0→z1 = 0→1 ; v: y0→y1 = 0→1
+    AddTriangleUV(scene,
+        Point(x1,y0,z0), Point(x1,y0,z1), Point(x1,y1,z1),
+        Vec2(0,0), Vec2(1,0), Vec2(1,1), mat_ndx);
+    AddTriangleUV(scene,
+        Point(x1,y0,z0), Point(x1,y1,z1), Point(x1,y1,z0),
+        Vec2(0,0), Vec2(1,1), Vec2(0,1), mat_ndx);
+ 
+    // Face inferior (y = y0, normal -Y)
+    // u: x0→x1 = 0→1 ; v: z1→z0 = 0→1
+    AddTriangleUV(scene,
+        Point(x0,y0,z1), Point(x1,y0,z1), Point(x1,y0,z0),
+        Vec2(0,0), Vec2(1,0), Vec2(1,1), mat_ndx);
+    AddTriangleUV(scene,
+        Point(x0,y0,z1), Point(x1,y0,z0), Point(x0,y0,z0),
+        Vec2(0,0), Vec2(1,1), Vec2(0,1), mat_ndx);
+ 
+    // Face superior (y = y1, normal +Y)
+    // u: x0→x1 = 0→1 ; v: z0→z1 = 0→1
+    AddTriangleUV(scene,
+        Point(x0,y1,z0), Point(x1,y1,z0), Point(x1,y1,z1),
+        Vec2(0,0), Vec2(1,0), Vec2(1,1), mat_ndx);
+    AddTriangleUV(scene,
+        Point(x0,y1,z0), Point(x1,y1,z1), Point(x0,y1,z1),
+        Vec2(0,0), Vec2(1,1), Vec2(0,1), mat_ndx);
+}
+
 static inline void AddBoxMultiMat(Scene& scene,
                                    Point const center, float const half,
                                    int const mat_front, int const mat_back,

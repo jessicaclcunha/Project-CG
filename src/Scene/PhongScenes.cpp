@@ -154,36 +154,44 @@ void PhongJustOneThing (Scene& scene) {
     scene.numLights++;
 }
 
-/*
-// 3 esferas: sem textura (referência), Dog.ppm, UMinho.ppm — especular Phong
 void PhongTextureScene (Scene& scene) {
-    int const plain = AddPhongMat(scene,
+    // --- materiais sem textura (referência) ---
+    int const plain_low = AddPhongMat(scene,
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f, 0.2f, 0.2f),
-        RGB(0.8f, 0.8f, 0.8f),
+        RGB(0.6f, 0.2f, 0.2f),   // difuso vermelho
+        RGB(0.8f, 0.8f, 0.8f),   // especular branco
         50.f);
-
+ 
+    // --- PhongTexture: Dog ---
     int const tex_dog = AddPhongTexMat(scene, "Dog.ppm",
         RGB(0.05f, 0.05f, 0.05f),
-        RGB(1.0f, 1.0f, 1.0f),
-        RGB(0.8f, 0.8f, 0.8f),
+        RGB(1.0f, 1.0f, 1.0f),   // Kd=1 → textura não é atenuada
+        RGB(0.8f, 0.8f, 0.8f),   // especular igual à referência
         50.f);
-
+ 
+    // --- PhongTexture: UMinho ---
     int const tex_um = AddPhongTexMat(scene, "UMinho.ppm",
         RGB(0.05f, 0.05f, 0.05f),
         RGB(1.0f, 1.0f, 1.0f),
         RGB(0.8f, 0.8f, 0.8f),
         50.f);
+ 
+    // linha de cima: esferas
+    AddSphere(scene, Point(-2.f, 0.8f, 5.f), 0.7f, plain_low);
+    AddSphere(scene, Point( 0.f, 0.8f, 5.f), 0.7f, tex_dog);
+    AddSphere(scene, Point( 2.f, 0.8f, 5.f), 0.7f, tex_um);
+ 
+    // linha de baixo: cubos com UV mapping
+    AddBoxUV(scene, Point(-2.f, -0.8f, 5.f), 0.55f, plain_low);
+    AddBoxUV(scene, Point( 0.f, -0.8f, 5.f), 0.55f, tex_dog);
+    AddBoxUV(scene, Point( 2.f, -0.8f, 5.f), 0.55f, tex_um);
 
-    AddSphere(scene, Point(-2.f, 0.f, 5.f), 0.8f, plain);
-    AddSphere(scene, Point( 0.f, 0.f, 5.f), 0.8f, tex_dog);
-    AddSphere(scene, Point( 2.f, 0.f, 5.f), 0.8f, tex_um);
-
-    AmbientLight *ambient = new AmbientLight(RGB(0.1f, 0.1f, 0.1f));
+    AmbientLight *ambient = new AmbientLight(RGB(0.08f, 0.08f, 0.08f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    PointLight *p1 = new PointLight(RGB(80.f, 80.f, 80.f), Point(0.f, 3.f, 0.f));
+ 
+    PointLight *p1 = new PointLight(RGB(200.f, 200.f, 200.f),
+                                     Point(-1.f, 3.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
-*/

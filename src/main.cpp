@@ -37,14 +37,18 @@ int main(int argc, const char * argv[]) {
     
     /* Scenes*/
     //DLightChallenge(scene);
+
+    //--PHONG--
     //PhongSphereScene(scene);
     //PhongCubeScene (scene);
     //PhongJustOneThing (scene);
+    //PhongTextureScene(scene);
+
+    //--COOK-TORRANCE--
     //CookTorranceSphereScene(scene);
     //CookTorranceCubeScene(scene);
     //CookTorranceJustOneThing (scene);
-    OrenNayarScene(scene);
-    //OrenNayarJustOneThing(scene);
+    
     
 
     //  === Default View Point (frontal) ===

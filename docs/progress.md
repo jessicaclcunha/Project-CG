@@ -40,9 +40,9 @@
 * [✔️] Testar com CookTorrance metallic vs dielectric.
 
 **Membro B:**
-* [ ] UV mapping para o cubo (`AddBoxUV`).
-* [ ] Testar `PhongTexture` e `CookTorranceTexture` no cubo.
-* [ ] Verificar que especular é independente da textura.
+* [✔️] UV mapping para o cubo (`AddBoxUV`).
+* [✔️] Testar `PhongTexture` e `CookTorranceTexture` no cubo.
+* [✔️] Verificar que especular é independente da textura.
 
 #### Semana 3: Oren-Nayar + Preparação Checkpoint 1 (March 30 to April 5) — 🟠 CHECKPOINT 1
 
