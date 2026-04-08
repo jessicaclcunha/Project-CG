@@ -35,9 +35,9 @@
 #### Semana 2: Multi-BRDF na Mesma Forma + Texturas em Cubos (March 23 to 29)
 
 **Membro A:**
-* [ ] Permitir diferentes materiais por face/triângulo do mesmo objeto.
-* [ ] Criar cena demo: cubo com face metálica + face plástica.
-* [ ] Testar com CookTorrance metallic vs dielectric.
+* [] Permitir diferentes materiais por face/triângulo do mesmo objeto.
+* [✔️] Criar cena demo: cubo com face metálica + face plástica.
+* [✔️] Testar com CookTorrance metallic vs dielectric.
 
 **Membro B:**
 * [✔️] UV mapping para o cubo (`AddBoxUV`).
@@ -47,16 +47,16 @@
 #### Semana 3: Oren-Nayar + Preparação Checkpoint 1 (March 30 to April 5) — 🟠 CHECKPOINT 1
 
 **Membro A:**
-* [ ] Implementar `OrenNayar.hpp` herdando de `BRDF`.
-* [ ] Parâmetro σ (roughness difuso).
-* [ ] Criar `OrenNayarScene` com variação de σ.
+* [✔️] Implementar `OrenNayar.hpp` herdando de `BRDF`.
+* [✔️] Parâmetro σ (roughness difuso).
+* [✔️] Criar `OrenNayarScene` com variação de σ.
+* [✔️] Adicionar Oren-Nayar ao `brdf_viewer`.
 
 **Membro B:**
-* [ ] Gerar renders comparativos (Phong vs CookTorrance vs Oren-Nayar).
-* [ ] Organizar imagens de teste.
-* [ ] Documentar melhorias feitas no CookTorrance.
-* [ ] Início da estrutura do relatório.
-
+* [ ] Implementar `Ward.hpp`.
+* [ ] Parâmetros: αx, αy (roughness anisotrópica).
+* [ ] Criar `WardScene` com variação anisotrópica.
+* [ ] Adicionar ao `brdf_viewer`.
 ---
 
 ### FASE 2 — BRDFs Avançadas
@@ -68,11 +68,13 @@
 * [ ] Implementar subsurface, metallic, specular, specularTint.
 * [ ] Criar `DisneyBRDF.hpp` com parâmetros base.
 
+
 **Membro B:**
-* [ ] Implementar `Ward.hpp`.
-* [ ] Parâmetros: αx, αy (roughness anisotrópica).
-* [ ] Criar `WardScene` com variação anisotrópica.
-* [ ] Adicionar ao `brdf_viewer`.
+* [ ] Gerar renders comparativos (Phong vs CookTorrance vs Oren-Nayar).
+* [ ] Organizar imagens de teste.
+* [ ] Documentar melhorias feitas no CookTorrance.
+* [ ] Início da estrutura do relatório.
+
 
 #### Semana 5: Disney Principled (Parte 2) + Ashikhmin-Shirley (April 13 to 19)
 

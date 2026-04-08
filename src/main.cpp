@@ -48,7 +48,7 @@ int main(int argc, const char * argv[]) {
     //CookTorranceSphereScene(scene);
     //CookTorranceCubeScene(scene);
     //CookTorranceJustOneThing (scene);
-    CookTorranceTextureScene(scene);
+    
     
 
     //  === Default View Point (frontal) ===

@@ -1,10 +1,3 @@
-//
-//  CookTorranceScenes.cpp
-//  VI-RT
-//
-//  Cook-Torrance BRDF scenes.
-//
-
 #include "BuildScenes.hpp"
 #include "SceneHelpers.hpp"
 
@@ -58,7 +51,7 @@ void CookTorranceCubeScene (Scene& scene) {
 
     /* OURO: metal condutor */
     RGB   const KdA(1.00f, 0.71f, 0.29f);
-    float const roughA = 0.3f;
+    float const roughA = 0.7f;  // lóbulo GGX largo: mais provável apanhar highlight em faces planas
     float const metalA = 1.0f;
 
     /* PRATA: metal condutor
@@ -76,7 +69,7 @@ void CookTorranceCubeScene (Scene& scene) {
 
     /* PLÁSTICO VERMELHO: dielétrico */
     RGB   const KdB(0.8f,  0.1f,  0.1f);
-    float const roughB = 0.3f;
+    float const roughB = 0.6f;
     float const metalB = 0.0f;
 
     /* CERÂMICA AZUL: dielétrico
