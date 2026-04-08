@@ -19,6 +19,7 @@
 #include "PhongTexture.hpp"
 #include "CookTorrance.hpp"
 #include "CookTorranceTexture.hpp"
+#include "OrenNayar.hpp"
 
 void SpheresScene (Scene& scene, int const N_spheres);
 void SpheresTriScene (Scene& scene);
@@ -35,5 +36,7 @@ void CookTorranceSphereScene (Scene& scene);
 void CookTorranceCubeScene (Scene& scene);
 //void CookTorranceTextureScene (Scene& scene);
 void CookTorranceJustOneThing (Scene& scene);
+void OrenNayarScene (Scene& scene);
+void OrenNayarJustOneThing (Scene& scene);
 
 #endif /* BuildScenes_hpp */

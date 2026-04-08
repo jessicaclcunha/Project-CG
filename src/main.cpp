@@ -41,8 +41,10 @@ int main(int argc, const char * argv[]) {
     //PhongCubeScene (scene);
     //PhongJustOneThing (scene);
     //CookTorranceSphereScene(scene);
-    CookTorranceCubeScene(scene);
+    //CookTorranceCubeScene(scene);
     //CookTorranceJustOneThing (scene);
+    OrenNayarScene(scene);
+    //OrenNayarJustOneThing(scene);
     
 
     //  === Default View Point (frontal) ===

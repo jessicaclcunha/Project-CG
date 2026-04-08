@@ -105,8 +105,8 @@ RGB DistributedShader::shade(bool intersected, Intersection isect, int depth) {
         color += specularTransmission (isect, f, depth+1);
     }
     
-    color += directLighting(scene, isect, f, rng, U_dist, UNIFORM_ONE);
-    // color += directLighting(scene, isect, f, rng, U_dist, ALL_LIGHTS);
+    // color += directLighting(scene, isect, f, rng, U_dist, UNIFORM_ONE);
+    color += directLighting(scene, isect, f, rng, U_dist, ALL_LIGHTS);
 
     return color;
 };
