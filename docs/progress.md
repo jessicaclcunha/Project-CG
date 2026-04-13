@@ -35,7 +35,7 @@
 #### Semana 2: Multi-BRDF na Mesma Forma + Texturas em Cubos (March 23 to 29)
 
 **Membro A:**
-* [] Permitir diferentes materiais por face/triângulo do mesmo objeto.
+* [✔️] Permitir diferentes materiais por face/triângulo do mesmo objeto.
 * [✔️] Criar cena demo: cubo com face metálica + face plástica.
 * [✔️] Testar com CookTorrance metallic vs dielectric.
 
@@ -53,10 +53,10 @@
 * [✔️] Adicionar Oren-Nayar ao `brdf_viewer`.
 
 **Membro B:**
-* [ ] Implementar `Ward.hpp`.
-* [ ] Parâmetros: αx, αy (roughness anisotrópica).
-* [ ] Criar `WardScene` com variação anisotrópica.
-* [ ] Adicionar ao `brdf_viewer`.
+* [✔️] Implementar `Ward.hpp`.
+* [✔️] Parâmetros: αx, αy (roughness anisotrópica).
+* [✔️] Criar `WardScene` com variação anisotrópica.
+* [✔️] Adicionar ao `brdf_viewer`.
 ---
 
 ### FASE 2 — BRDFs Avançadas

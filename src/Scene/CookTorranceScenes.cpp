@@ -37,8 +37,17 @@ void CookTorranceSphereScene (Scene& scene) {
     scene.lights.push_back(ambient);
     scene.numLights++;
 
-    PointLight *p1 = new PointLight(RGB(200.f, 200.f, 200.f), Point(0.f, 2.f, -1.f));
-    scene.lights.push_back(p1);
+    // AreaLight overhead em vez de PointLight: a "mancha" de luz na esfera
+    // espelha diretamente a forma do lóbulo GGX — lóbulo largo (roughness alto)
+    // vs. lóbulo concentrado (roughness baixo) torna-se imediatamente visível.
+    Vector lightN(0.f, -1.f, 0.f);
+    AreaLight *a1 = new AreaLight(RGB(80.f, 80.f, 80.f),
+        Point(-5.f, 3.f, 1.f), Point(5.f, 3.f, 1.f), Point(5.f, 3.f, 5.f), lightN);
+    scene.lights.push_back(a1);
+    scene.numLights++;
+    AreaLight *a2 = new AreaLight(RGB(80.f, 80.f, 80.f),
+        Point(-5.f, 3.f, 1.f), Point(5.f, 3.f, 5.f), Point(-5.f, 3.f, 5.f), lightN);
+    scene.lights.push_back(a2);
     scene.numLights++;
 }
 

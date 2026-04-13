@@ -31,37 +31,21 @@ static int AddPhongTexMat (Scene& scene, std::string filename, RGB const Ka, RGB
 }
 
 void PhongSphereScene (Scene& scene) {
-    int const diff_mat = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f,  0.2f,  0.2f),
-        RGB(0.0f,  0.0f,  0.0f),
-        1.f);
+    // Estudo do expoente ns: Kd e Ks iguais em todas as esferas (cinzento neutro),
+    // só ns varia — assim a diferença visual isola exclusivamente o efeito do expoente.
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Kd(0.45f, 0.45f, 0.45f);  // cinzento neutro — igual em todas
+    RGB const Ks(0.45f, 0.45f, 0.45f);  // especular igual em todas (Kd+Ks=0.9 ≤ 1)
 
-    // ns = 5
-    int const phong_rough = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.4f,  0.7f),   // azul
-        RGB(0.8f,  0.8f,  0.8f),
-        5.f);
+    int const phong_ns1   = AddPhongMat(scene, Ka, Kd, Ks,   1.f);  // lóbulo muito largo
+    int const phong_ns5   = AddPhongMat(scene, Ka, Kd, Ks,   5.f);
+    int const phong_ns50  = AddPhongMat(scene, Ka, Kd, Ks,  50.f);
+    int const phong_ns500 = AddPhongMat(scene, Ka, Kd, Ks, 500.f);  // lóbulo muito concentrado
 
-    // ns = 50
-    int const phong_mid = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.2f,  0.6f,  0.2f),   // verde
-        RGB(0.8f,  0.8f,  0.8f),
-        50.f);
-
-    // ns = 500
-    int const phong_shiny = AddPhongMat(scene,
-        RGB(0.05f, 0.05f, 0.05f),
-        RGB(0.6f,  0.4f,  0.1f),   // laranja
-        RGB(0.9f,  0.9f,  0.9f),
-        500.f);
-
-    AddSphere(scene, Point(-3.f, 0.f, 5.f), 0.8f, diff_mat);
-    AddSphere(scene, Point(-1.f, 0.f, 5.f), 0.8f, phong_rough);
-    AddSphere(scene, Point( 1.f, 0.f, 5.f), 0.8f, phong_mid);
-    AddSphere(scene, Point( 3.f, 0.f, 5.f), 0.8f, phong_shiny);
+    AddSphere(scene, Point(-3.f, 0.f, 5.f), 0.8f, phong_ns1);
+    AddSphere(scene, Point(-1.f, 0.f, 5.f), 0.8f, phong_ns5);
+    AddSphere(scene, Point( 1.f, 0.f, 5.f), 0.8f, phong_ns50);
+    AddSphere(scene, Point( 3.f, 0.f, 5.f), 0.8f, phong_ns500);
 
     // ajustar aqui caso vejamos que esteja mt escuro, claro e coisas assim
     AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));

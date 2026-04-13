@@ -39,7 +39,10 @@ void OrenNayarScene (Scene& scene) {
     scene.lights.push_back(ambient);
     scene.numLights++;
 
-    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f, 2.f, 0.f));
+    // Luz junto à câmara (Eye=(0,0.5,-5)) para demonstrar retroreflexão:
+    // a superfície Oren-Nayar (sigma alto) aparece uniformemente iluminada,
+    // enquanto o Lambertiano (sigma=0) escurece claramente nas bordas.
+    PointLight *p1 = new PointLight(RGB(1000.f, 1000.f, 1000.f), Point(0.f, 0.5f, -4.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }
@@ -80,7 +83,8 @@ void OrenNayarJustOneThing (Scene& scene) {
     scene.lights.push_back(ambient);
     scene.numLights++;
 
-    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f, 2.f, 0.f));
+    // Luz junto à câmara para demonstrar retroreflexão (ver OrenNayarScene)
+    PointLight *p1 = new PointLight(RGB(1000.f, 1000.f, 1000.f), Point(0.f, 0.5f, -4.f));
     scene.lights.push_back(p1);
     scene.numLights++;
 }

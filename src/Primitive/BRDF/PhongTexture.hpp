@@ -21,19 +21,28 @@ public:
     RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {
         RGB color(0.f, 0.f, 0.f);
 
+        int x = (int)floor(curTexCoord.u * tex_W);
+        int y = (int)floor(curTexCoord.v * tex_H);
+        RGB Kd_tex = Kd * texture.get(x, y);
+
+        // Conservação de energia: Kd_tex + Ks_brdf <= 1 por canal.
+        float maxSum = std::max({Kd_tex.R + Ks_brdf.R,
+                                 Kd_tex.G + Ks_brdf.G,
+                                 Kd_tex.B + Ks_brdf.B});
+        float norm = (maxSum > 1.f) ? 1.f / maxSum : 1.f;
+        RGB eff_Kd = Kd_tex  * norm;
+        RGB eff_Ks = Ks_brdf * norm;
+
         if (type & DIFFUSE_REF) {
-            int x = (int)floor(curTexCoord.u * tex_W);
-            int y = (int)floor(curTexCoord.v * tex_H);
-            RGB Kd_tex = Kd * texture.get(x, y);
-            color += Kd_tex * (1.f / M_PI);
+            color += eff_Kd * (1.f / M_PI);
         }
 
-        if (!Ks_brdf.isZero() && (type & GLOSSY_REF)) {
+        if (!eff_Ks.isZero() && (type & GLOSSY_REF)) {
             float cosWiN = std::max(0.f, N.dot(wi));
             Vector R = 2.f * cosWiN * N - wi;
             float cosRWo = std::max(0.f, R.dot(wo));
             float spec = ((ns + 2.f) / (2.f * M_PI)) * powf(cosRWo, ns);
-            color += Ks_brdf * spec;
+            color += eff_Ks * spec;
         }
 
         return color;

@@ -12,7 +12,10 @@ static void AddLights(Scene& scene) {
     AmbientLight *ambient = new AmbientLight(RGB(0.06f, 0.05f, 0.04f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    PointLight *fill = new PointLight(RGB(300.f, 300.f, 300.f), Point(0.f, 1.f, -3.f));
+    // Luz lateral (não frontal): o highlight aparece a 45° na esfera,
+    // onde o alongamento anisotrópico (alphaX≠alphaY) é claramente visível
+    // como uma elipse horizontal vs. o círculo das esferas isotrópicas.
+    PointLight *fill = new PointLight(RGB(300.f, 300.f, 300.f), Point(4.f, 1.5f, 0.f));
     scene.lights.push_back(fill);
     scene.numLights++;
 }
