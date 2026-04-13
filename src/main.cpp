@@ -48,12 +48,17 @@ int main(int argc, const char * argv[]) {
     //CookTorranceSphereScene(scene);
     //CookTorranceCubeScene(scene);
     //CookTorranceJustOneThing (scene);
+
+    //--WARD--
+    WardScene(scene);
+    //WardJustOneThing(scene);
+    //WardCubeScene(scene);
     
     
 
     //  === Default View Point (frontal) ===
-    //const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};
-    //const Vector Up = {0, 1, 0};
+    const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};
+    const Vector Up = {0, 1, 0};
 
     // === Up View Point (topo) ===
     //const Point Eye = {0, 10, 3}, At = {0, 0, 3};
@@ -64,8 +69,8 @@ int main(int argc, const char * argv[]) {
     //const Vector Up = {0, 1, 0};
 
     // === Diagonal View Point (frontal + topo) ===
-    const Point Eye = {3, 3, -3}, At = {0, 0, 3};
-    const Vector Up = {0, 1, 0};
+    // const Point Eye = {3, 3, -3}, At = {0, 0, 3};
+    // const Vector Up = {0, 1, 0};
 
     const float deFocusRad = 0*3.14f/180.f;
     const float FocusDist = 1.f;
