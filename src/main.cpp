@@ -50,10 +50,17 @@ int main(int argc, const char * argv[]) {
     //CookTorranceJustOneThing (scene);
 
     //--WARD--
-    WardScene(scene);
+    //WardScene(scene);
     //WardJustOneThing(scene);
     //WardCubeScene(scene);
     
+
+   //--ASHIKHMIN-SHIRLEY--
+   AshikhminShirleyScene(scene);
+   //AshikhminShirleyAnisotropicScene(scene);
+   //AshikhminShirleyMaterialsScene(scene);
+   //AshikhminShirleyJustOneThing(scene);
+   //AshikhminShirleyCubeScene(scene);
     
 
     //  === Default View Point (frontal) ===
