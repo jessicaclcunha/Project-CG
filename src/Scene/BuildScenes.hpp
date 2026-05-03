@@ -37,6 +37,7 @@ void CookTorranceSphereScene (Scene& scene);
 void CookTorranceCubeScene (Scene& scene);
 void CookTorranceTextureScene (Scene& scene);
 void CookTorranceJustOneThing (Scene& scene);
+void CookTorranceShowcase (Scene& scene);
 void OrenNayarScene (Scene& scene);
 void OrenNayarJustOneThing (Scene& scene);
 void WardScene(Scene& scene);

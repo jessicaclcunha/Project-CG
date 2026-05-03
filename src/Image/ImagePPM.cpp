@@ -25,12 +25,13 @@ void ImagePPM::ImgClamp (int const W, int const H, RGB *image, char_pixel *img2s
     TM.ToneMap(W, H, image, imageTM);
     
     // loop over each pixel in the image, clamp and convert to byte format
+    const float gamma_inv = 1.f / 2.2f;
     for (int j = 0 ; j< H ; j++) {
         for (int i = 0; i < W ; ++i) {
             RGB Cout = imageTM[j*W+i];
-            img2save[j*W+i].val[0] = (unsigned char)(fmax(fmin(1.f, Cout.R),0.f) * 255);
-            img2save[j*W+i].val[1] = (unsigned char)(fmax(fmin(1.f, Cout.G),0.f) * 255);
-            img2save[j*W+i].val[2] = (unsigned char)(fmax(fmin(1.f, Cout.B),0.f) * 255);
+            img2save[j*W+i].val[0] = (unsigned char)(powf(fmax(fmin(1.f, Cout.R),0.f), gamma_inv) * 255);
+            img2save[j*W+i].val[1] = (unsigned char)(powf(fmax(fmin(1.f, Cout.G),0.f), gamma_inv) * 255);
+            img2save[j*W+i].val[2] = (unsigned char)(powf(fmax(fmin(1.f, Cout.B),0.f), gamma_inv) * 255);
         }
     }
     delete [] imageTM;

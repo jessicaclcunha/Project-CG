@@ -48,9 +48,10 @@ int main(int argc, const char * argv[]) {
     //CookTorranceSphereScene(scene);
     //CookTorranceCubeScene(scene);
     //CookTorranceJustOneThing (scene);
+    CookTorranceShowcase(scene);
 
     //--WARD--
-    WardScene(scene);
+    //WardScene(scene);
     //WardJustOneThing(scene);
     //WardCubeScene(scene);
     
