@@ -46,9 +46,12 @@ int main(int argc, const char * argv[]) {
 
     //--COOK-TORRANCE--
     //CookTorranceSphereScene(scene);
-    //CookTorranceCubeScene(scene);
-    //CookTorranceJustOneThing (scene);
-    CookTorranceShowcase(scene);
+    //CookTorranceShowcase(scene);
+    //CookTorranceTestStandart(scene); // Standart: com EC
+    //CookTorranceNoECTest2(scene);   // Teste:    sem EC
+    //CookTorranceFConstTest(scene);  // Fresnel constante (F=F0)
+    //CookTorranceFExpTest(scene);    // Fresnel expoente 20
+    CookTorranceFInvTest(scene);    // Fresnel invertido
 
     //--WARD--
     //WardScene(scene);
@@ -82,7 +85,7 @@ int main(int argc, const char * argv[]) {
 
     /* Shader */
     shd = new DistributedShader(&scene, RGB(0.05,0.05,0.1));
-    int const spp=128;
+    int const spp=512;
 
     //shd = new WhittedShader(&scene, RGB(0.,0.,0.2));
     //int const spp=1;

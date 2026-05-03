@@ -1,5 +1,6 @@
 #include "BuildScenes.hpp"
 #include "SceneHelpers.hpp"
+#include "CookTorranceNoEC.hpp"
 
 static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks, float const roughness, float const metallic, RGB const Ks_mirror = RGB(0.f, 0.f, 0.f)) {
     CookTorrance *brdf = new CookTorrance;
@@ -13,166 +14,51 @@ static int AddCookTorranceMat (Scene& scene, RGB const Ka, RGB const Kd, RGB con
     return (scene.AddMaterial(brdf));
 }
 
+// Key AreaLight pequena (y=5) + PointLight fill lateral + ambient + chão escuro.
+// x0/x1, z0/z1 definem os limites da key; keyPower a sua potência.
+static void setCTLighting (Scene& scene,
+                            float x0, float x1,
+                            float z0, float z1,
+                            float keyPower,
+                            float floorY = -0.8f) {
+    Vector nDown(0.f, -1.f, 0.f);
+    AreaLight *key0 = new AreaLight(RGB(keyPower,keyPower,keyPower),
+        Point(x0,5.f,z0), Point(x1,5.f,z0), Point(x1,5.f,z1), nDown);
+    AreaLight *key1 = new AreaLight(RGB(keyPower,keyPower,keyPower),
+        Point(x0,5.f,z0), Point(x1,5.f,z1), Point(x0,5.f,z1), nDown);
+    scene.lights.push_back(key0); scene.numLights++;
+    scene.lights.push_back(key1); scene.numLights++;
+
+    PointLight *fill = new PointLight(RGB(100.f,100.f,100.f), Point(-5.f,2.f,1.f));
+    scene.lights.push_back(fill); scene.numLights++;
+
+    AmbientLight *ambient = new AmbientLight(RGB(0.02f,0.02f,0.02f));
+    scene.lights.push_back(ambient); scene.numLights++;
+
+    int floor_mat = AddDiffuseMat(scene, RGB(0.07f,0.07f,0.07f));
+    AddTriangle(scene, Point(-6.f,floorY,-2.f), Point(6.f,floorY,-2.f), Point(6.f,floorY,8.f), floor_mat);
+    AddTriangle(scene, Point(-6.f,floorY,-2.f), Point(6.f,floorY,8.f), Point(-6.f,floorY,8.f), floor_mat);
+}
+
 
 void CookTorranceSphereScene (Scene& scene) {
-    // COBRE: metal condutor — F0 derivado de Kd (albedo), metallic=1.0
-    RGB const Kd(0.95f, 0.64f, 0.54f);  // albedo do cobre = F0
+    // 4 metais condutores a roughness fixo (0.3): isola o efeito do Kd/F0
+    // cromáticos (gold, copper) vs neutros (silver, iron)
     RGB const Ks(1.0f, 1.0f, 1.0f);
     RGB const Ka(0.02f, 0.02f, 0.02f);
-    float const metallic = 1.0f;
-
-    int const ct_rough  = AddCookTorranceMat(scene, Ka, Kd, Ks, 1.0f,  metallic);
-    int const ct_mid    = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.5f,  metallic);
-    int const ct_shiny  = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.2f,  metallic);
-    int const ct_mirror = AddCookTorranceMat(scene, Ka, Kd, Ks, 0.05f, metallic);
-
-    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, ct_rough);
-    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, ct_mid);
-    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, ct_shiny);
-    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, ct_mirror);
-
-    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
-    scene.lights.push_back(ambient);
-    scene.numLights++;
-
-    PointLight *p1 = new PointLight(RGB(200.f, 200.f, 200.f), Point(0.f, 2.f, -1.f));
-    scene.lights.push_back(p1);
-    scene.numLights++;
-}
-
-void CookTorranceCubeScene (Scene& scene) {
-    // ====== MATERIAIS DAS FACES — descomentar/trocar à vontade ======
-    RGB const Ks(1.0f, 1.0f, 1.0f);
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-
-    // --- Face A: metal ---
-
-    /* OURO: metal condutor */
-    RGB   const KdA(1.00f, 0.71f, 0.29f);  // albedo do ouro = F0
-    float const roughA  = 0.7f;
-    float const metalA  = 1.0f;
-
-    /* PRATA: metal condutor
-    RGB   const KdA(0.95f, 0.93f, 0.88f);
-    float const roughA  = 0.15f;
-    float const metalA  = 1.0f;
-    */
-    /* COBRE: metal condutor
-    RGB   const KdA(0.95f, 0.64f, 0.54f);
-    float const roughA  = 0.2f;
-    float const metalA  = 1.0f;
-    */
-
-    // --- Face B: dielétrico ---
-
-    /* PLÁSTICO VERMELHO: dielétrico */
-    RGB   const KdB(0.8f,  0.1f,  0.1f);
-    float const roughB  = 0.6f;
-    float const metalB  = 0.0f;
-
-    /* CERÂMICA AZUL: dielétrico
-    RGB   const KdB(0.1f,  0.2f,  0.6f);
-    float const roughB  = 0.4f;
-    float const metalB  = 0.0f;
-    */
-    /* BORRACHA: dielétrico
-    RGB   const KdB(0.02f, 0.02f, 0.02f);
-    float const roughB  = 0.9f;
-    float const metalB  = 0.0f;
-    */
-    /* SAFIRA: dielétrico
-    RGB   const KdB(0.01f, 0.02f, 0.35f);
-    float const roughB  = 0.2f;
-    float const metalB  = 0.0f;
-    */
-
-    int const matA = AddCookTorranceMat(scene, Ka, KdA, Ks, roughA, metalA);
-    int const matB = AddCookTorranceMat(scene, Ka, KdB, Ks, roughB, metalB);
-
-    //                          front, back, left,  right, bottom, top
-    AddBoxMultiMat(scene, Point(0.f, 0.f, 3.f), 0.8f,
-                   matB, matA, matA, matA, matB, matA);
-
-    // Chão cinzento
-    int const ground = AddDiffuseMat(scene, RGB(0.4f, 0.4f, 0.4f));
-    AddTriangle(scene, Point(-5.f,-0.8f,-5.f), Point(5.f,-0.8f,-5.f), Point(5.f,-0.8f,10.f), ground);
-    AddTriangle(scene, Point(-5.f,-0.8f,-5.f), Point(5.f,-0.8f,10.f), Point(-5.f,-0.8f,10.f), ground);
-
-    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
-    scene.lights.push_back(ambient);
-    scene.numLights++;
-
-    Vector lightN(0.f, -1.f, 0.f);
-    AreaLight *a1 = new AreaLight(RGB(80.f, 80.f, 80.f),
-        Point(-2.f, 3.f, 1.f), Point(2.f, 3.f, 1.f), Point(2.f, 3.f, 5.f), lightN);
-    scene.lights.push_back(a1);
-    scene.numLights++;
-    AreaLight *a2 = new AreaLight(RGB(80.f, 80.f, 80.f),
-        Point(-2.f, 3.f, 1.f), Point(2.f, 3.f, 5.f), Point(-2.f, 3.f, 5.f), lightN);
-    scene.lights.push_back(a2);
-    scene.numLights++;
-
-    PointLight *fill = new PointLight(RGB(30.f, 30.f, 30.f), Point(-3.f, 1.f, 0.f));
-    scene.lights.push_back(fill);
-    scene.numLights++;
-}
-
-void CookTorranceJustOneThing (Scene& scene) {
-
-    /* OURO: metal condutor */
-    RGB const Kd(1.00f, 0.71f, 0.29f);  // albedo do ouro = F0
-    RGB const Ks(1.0f,  1.0f,  1.0f);
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    float const roughness = 0.5f;
-    float const metallic  = 1.0f;
-
-    /* PRATA: metal condutor
-    RGB const Kd(0.95f, 0.93f, 0.88f);
-    RGB const Ks(1.0f,  1.0f,  1.0f);
-    RGB const Ka(0.05f, 0.05f, 0.05f);
-    float const roughness = 0.15f;
-    float const metallic  = 1.0f;
-    */
-    /* COBRE: metal condutor
-    RGB const Kd(0.95f, 0.64f, 0.54f);
-    RGB const Ks(1.0f,  1.0f,  1.0f);
-    RGB const Ka(0.03f, 0.01f, 0.01f);
-    float const roughness = 0.2f;
-    float const metallic  = 1.0f;
-    */
-    /* SAFIRA: dielétrico
-    RGB const Kd(0.01f, 0.02f, 0.35f);
-    RGB const Ks(1.0f,  1.0f,  1.0f);
-    RGB const Ka(0.01f, 0.01f, 0.03f);
-    float const roughness = 0.2f;
-    float const metallic  = 0.0f;
-    */
-    /* PLÁSTICO: dielétrico
-    RGB const Kd(0.8f,  0.1f,  0.1f);
-    RGB const Ks(1.0f,  1.0f,  1.0f);
-    RGB const Ka(0.05f, 0.01f, 0.01f);
     float const roughness = 0.3f;
-    float const metallic  = 0.0f;
-    */
-    /* BORRACHA: dielétrico
-    RGB const Kd(0.02f, 0.02f, 0.02f);
-    RGB const Ks(1.0f,  1.0f,  1.0f);
-    RGB const Ka(0.01f, 0.01f, 0.01f);
-    float const roughness = 0.9f;
-    float const metallic  = 0.0f;
-    */
 
-    int const app = AddCookTorranceMat(scene, Ka, Kd, Ks, roughness, metallic);
+    int const gold   = AddCookTorranceMat(scene, Ka, RGB(1.00f, 0.71f, 0.29f), Ks, roughness, 1.0f);
+    int const copper = AddCookTorranceMat(scene, Ka, RGB(0.95f, 0.64f, 0.54f), Ks, roughness, 1.0f);
+    int const silver = AddCookTorranceMat(scene, Ka, RGB(0.95f, 0.93f, 0.88f), Ks, roughness, 1.0f);
+    int const iron   = AddCookTorranceMat(scene, Ka, RGB(0.56f, 0.57f, 0.58f), Ks, roughness, 1.0f);
 
-    AddSphere(scene, Point(0.f, 0.f, 3.f), 0.8f, app);
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, gold);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, copper);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, silver);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, iron);
 
-    AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
-    scene.lights.push_back(ambient);
-    scene.numLights++;
-
-    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f,  2.f, 0.f));
-    scene.lights.push_back(p1);
-    scene.numLights++;
+    setCTLighting(scene, -1.5f, 1.5f, 2.f, 4.f, 400.f);
 }
 
 static int AddCookTorranceTexMat (Scene& scene, std::string filename,
@@ -190,43 +76,41 @@ static int AddCookTorranceTexMat (Scene& scene, std::string filename,
 }
 
 void CookTorranceShowcase (Scene& scene) {
-    // Grade 2x4: linhas = metallic vs dielétrico, colunas = roughness
+    // Grade 3x4: linhas = metallic (1.0 / 0.5 / 0.0), colunas = roughness
     // roughness: 0.05  0.2   0.5   0.9
     // linha 0 (topo):  ouro,  metallic=1.0
-    // linha 1 (baixo): plástico azul, metallic=0.0
+    // linha 1 (meio):  ouro Kd, metallic=0.5 — isola o efeito do metallic
+    // linha 2 (baixo): plastico azul, metallic=0.0
 
     RGB const Ks(1.0f, 1.0f, 1.0f);
     RGB const Ka(0.02f, 0.02f, 0.02f);
 
     RGB const Kd_metal(1.00f, 0.71f, 0.29f);   // albedo do ouro = F0
-    RGB const Kd_diel (0.10f, 0.20f, 0.80f);   // plástico azul
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);   // plastico azul
 
     float const roughness[4] = { 0.05f, 0.2f, 0.5f, 0.9f };
 
     // criar materiais
-    int mat_metal[4], mat_diel[4];
+    int mat_metal[4], mat_semi[4], mat_diel[4];
     for (int i = 0; i < 4; i++) {
         mat_metal[i] = AddCookTorranceMat(scene, Ka, Kd_metal, Ks, roughness[i], 1.0f);
+        mat_semi [i] = AddCookTorranceMat(scene, Ka, Kd_metal, Ks, roughness[i], 0.5f);
         mat_diel [i] = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, roughness[i], 0.0f);
     }
 
-    // posições X das 4 colunas, centradas em 0
+    // posicoes X das 4 colunas, centradas em 0
     float const xs[4] = { -3.f, -1.f, 1.f, 3.f };
     float const radius = 0.7f;
     float const z = 3.f;
 
     for (int i = 0; i < 4; i++) {
-        AddSphere(scene, Point(xs[i],  1.1f, z), radius, mat_metal[i]);  // linha de cima
-        AddSphere(scene, Point(xs[i], -1.1f, z), radius, mat_diel [i]);  // linha de baixo
+        AddSphere(scene, Point(xs[i],  2.2f, z), radius, mat_metal[i]);  // linha de cima
+        AddSphere(scene, Point(xs[i],  0.0f, z), radius, mat_semi [i]);  // linha do meio
+        AddSphere(scene, Point(xs[i], -2.2f, z), radius, mat_diel [i]);  // linha de baixo
     }
 
-    AmbientLight *ambient = new AmbientLight(RGB(0.04f, 0.04f, 0.04f));
-    scene.lights.push_back(ambient);
-    scene.numLights++;
-
-    PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f, 5.f, 0.f));
-    scene.lights.push_back(p1);
-    scene.numLights++;
+    // floorY=-3.1: base da esfera de baixo = -2.2 - 0.7 = -2.9; floor a -3.1 esta abaixo
+    setCTLighting(scene, -2.f, 2.f, 0.5f, 5.5f, 500.f, -3.1f);
 }
 
 void CookTorranceTextureScene (Scene& scene) {
@@ -265,4 +149,185 @@ void CookTorranceTextureScene (Scene& scene) {
                                      Point(-1.f, 3.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
+}
+
+// -------------------------------------------------------------------------
+// Cena de teste: conservação de energia (EC)
+// -------------------------------------------------------------------------
+
+static int AddCookTorranceNoECMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                                    float const roughness, float const metallic) {
+    CookTorranceNoEC *brdf = new CookTorranceNoEC;
+    brdf->Ka        = Ka;
+    brdf->Kd        = Kd;
+    brdf->Ks        = RGB(0.f, 0.f, 0.f);
+    brdf->Ks_brdf   = Ks;
+    brdf->Kt        = RGB(0.f, 0.f, 0.f);
+    brdf->roughness = roughness;
+    brdf->metallic  = metallic;
+    return (scene.AddMaterial(brdf));
+}
+
+// -------------------------------------------------------------------------
+// Cena melhorada: iluminação direccional para maximizar legibilidade do EC.
+//
+// Problema da cena 1: 8 AreaLights enormes → iluminação omnidireccional
+// → especular lavado, zonas claras e escuras indiferenciadas.
+//
+// Solução: 1 AreaLight pequena (key, 3×2 u²) + 1 PointLight lateral (fill).
+// Resultado: highlight nítido vs zona escura claramente separados —
+// o metal sem difuso fica visivelmente escuro fora do highlight;
+// o dielétrico liso mostra o Fresnel grazing no bordo iluminado.
+// -------------------------------------------------------------------------
+
+static void addECTestLighting2 (Scene& scene) {
+    // Key light: AreaLight 3×2 u² centrada por cima das 4 esferas.
+    // Intensidade ≈ 400/6 ≈ 67 u⁻² vs ≈ 2 u⁻² da cena 1 → highlight 30× mais nítido.
+    Vector nDown(0.f, -1.f, 0.f);
+    AreaLight *key0 = new AreaLight(RGB(400.f,400.f,400.f),
+        Point(-1.5f,5.f,2.f), Point(1.5f,5.f,2.f), Point(1.5f,5.f,4.f), nDown);
+    AreaLight *key1 = new AreaLight(RGB(400.f,400.f,400.f),
+        Point(-1.5f,5.f,2.f), Point(1.5f,5.f,4.f), Point(-1.5f,5.f,4.f), nDown);
+    scene.lights.push_back(key0); scene.numLights++;
+    scene.lights.push_back(key1); scene.numLights++;
+
+    // Fill light: PointLight lateral esquerdo — ilumina a face lateral das esferas
+    // e torna o Fresnel grazing-angle visível sem apagar as sombras da key.
+    PointLight *fill = new PointLight(RGB(100.f,100.f,100.f), Point(-5.f, 2.f, 1.f));
+    scene.lights.push_back(fill); scene.numLights++;
+
+    // Ambient mínimo — evita preto absoluto nas zonas sem luz directa.
+    AmbientLight *ambient = new AmbientLight(RGB(0.02f, 0.02f, 0.02f));
+    scene.lights.push_back(ambient); scene.numLights++;
+
+    // Chão escuro (sem paredes — fundo dado pelo shader RGB 0.05,0.05,0.1).
+    int floor_mat = AddDiffuseMat(scene, RGB(0.07f, 0.07f, 0.07f));
+    AddTriangle(scene, Point(-6.f,-0.8f,-2.f), Point(6.f,-0.8f,-2.f), Point(6.f,-0.8f,8.f), floor_mat);
+    AddTriangle(scene, Point(-6.f,-0.8f,-2.f), Point(6.f,-0.8f,8.f), Point(-6.f,-0.8f,8.f), floor_mat);
+}
+
+void CookTorranceTestStandart (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddCookTorranceMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+// -------------------------------------------------------------------------
+// Cenas de teste: variantes do Fresnel
+// -------------------------------------------------------------------------
+
+static int AddFConstMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                          float const roughness, float const metallic) {
+    CookTorranceFConst *brdf = new CookTorranceFConst;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddFExpMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                        float const roughness, float const metallic) {
+    CookTorranceFExp *brdf = new CookTorranceFExp;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddFInvMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                        float const roughness, float const metallic) {
+    CookTorranceFInv *brdf = new CookTorranceFInv;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+void CookTorranceFConstTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddFConstMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddFConstMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddFConstMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddFConstMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceFExpTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddFExpMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddFExpMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddFExpMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddFExpMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceFInvTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddFInvMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddFInvMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddFInvMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddFInvMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceNoECTest2 (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddCookTorranceNoECMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddCookTorranceNoECMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddCookTorranceNoECMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddCookTorranceNoECMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
 }

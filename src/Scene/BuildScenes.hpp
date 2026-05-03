@@ -19,6 +19,10 @@
 #include "PhongTexture.hpp"
 #include "CookTorrance.hpp"
 #include "CookTorranceTexture.hpp"
+#include "CookTorranceNoEC.hpp"
+#include "CookTorranceFConst.hpp"
+#include "CookTorranceFExp.hpp"
+#include "CookTorranceFInv.hpp"
 #include "OrenNayar.hpp"
 #include "Ward.hpp"
 
@@ -34,14 +38,17 @@ void PhongCubeScene (Scene& scene);
 void PhongJustOneThing (Scene& scene);
 void PhongTextureScene (Scene& scene);
 void CookTorranceSphereScene (Scene& scene);
-void CookTorranceCubeScene (Scene& scene);
 void CookTorranceTextureScene (Scene& scene);
-void CookTorranceJustOneThing (Scene& scene);
 void CookTorranceShowcase (Scene& scene);
 void OrenNayarScene (Scene& scene);
 void OrenNayarJustOneThing (Scene& scene);
 void WardScene(Scene& scene);
 void WardJustOneThing(Scene& scene);
 void WardCubeScene(Scene& scene);
+void CookTorranceTestStandart(Scene& scene);
+void CookTorranceNoECTest2(Scene& scene);
+void CookTorranceFConstTest(Scene& scene);
+void CookTorranceFExpTest(Scene& scene);
+void CookTorranceFInvTest(Scene& scene);
 
 #endif /* BuildScenes_hpp */
