@@ -23,6 +23,11 @@
 #include "CookTorranceFConst.hpp"
 #include "CookTorranceFExp.hpp"
 #include "CookTorranceFInv.hpp"
+#include "CookTorranceKDMetal.hpp"
+#include "CookTorranceKDLerp.hpp"
+#include "CookTorranceGNone.hpp"
+#include "CookTorranceGOne.hpp"
+#include "CookTorranceGKelemen.hpp"
 #include "OrenNayar.hpp"
 #include "Ward.hpp"
 #include "AshikhminShirley.hpp"
@@ -51,6 +56,11 @@ void CookTorranceNoECTest2(Scene& scene);
 void CookTorranceFConstTest(Scene& scene);
 void CookTorranceFExpTest(Scene& scene);
 void CookTorranceFInvTest(Scene& scene);
+void CookTorranceKDMetalTest(Scene& scene);
+void CookTorranceKDLerpTest(Scene& scene);
+void CookTorranceGNoneTest(Scene& scene);
+void CookTorranceGOneTest(Scene& scene);
+void CookTorranceGKelemenTest(Scene& scene);
 void AshikhminShirleyScene(Scene& scene);
 void AshikhminShirleyAnisotropicScene(Scene& scene);
 void AshikhminShirleyMaterialsScene(Scene& scene);

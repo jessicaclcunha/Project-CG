@@ -331,3 +331,151 @@ void CookTorranceNoECTest2 (Scene& scene) {
 
     addECTestLighting2(scene);
 }
+
+// -------------------------------------------------------------------------
+// Cenas de teste: mistura difuso/especular nao fisica (kD alternativo)
+// -------------------------------------------------------------------------
+
+static int AddKDMetalMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                           float const roughness, float const metallic) {
+    CookTorranceKDMetal *brdf = new CookTorranceKDMetal;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddKDLerpMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                          float const roughness, float const metallic) {
+    CookTorranceKDLerp *brdf = new CookTorranceKDLerp;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+void CookTorranceKDMetalTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddKDMetalMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddKDMetalMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddKDMetalMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddKDMetalMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceKDLerpTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddKDLerpMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddKDLerpMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddKDLerpMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddKDLerpMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+// -------------------------------------------------------------------------
+// Cenas de teste: modificadores do termo G (shadowing-masking)
+// -------------------------------------------------------------------------
+
+static int AddGNoneMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                         float const roughness, float const metallic) {
+    CookTorranceGNone *brdf = new CookTorranceGNone;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddGOneMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                        float const roughness, float const metallic) {
+    CookTorranceGOne *brdf = new CookTorranceGOne;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddGKelemenMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                            float const roughness, float const metallic) {
+    CookTorranceGKelemen *brdf = new CookTorranceGKelemen;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+void CookTorranceGNoneTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddGNoneMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddGNoneMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddGNoneMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddGNoneMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceGOneTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddGOneMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddGOneMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddGOneMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddGOneMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceGKelemenTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddGKelemenMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddGKelemenMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddGKelemenMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddGKelemenMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}

@@ -47,11 +47,16 @@ int main(int argc, const char * argv[]) {
     //--COOK-TORRANCE--
     //CookTorranceSphereScene(scene);
     //CookTorranceShowcase(scene);
-    CookTorranceTestStandart(scene); // Standart: com EC
+    //CookTorranceTestStandart(scene); // Standart: com EC
     //CookTorranceNoECTest2(scene);   // Teste:    sem EC
     //CookTorranceFConstTest(scene);  // Fresnel constante (F=F0)
     //CookTorranceFExpTest(scene);    // Fresnel expoente 20
     //CookTorranceFInvTest(scene);    // Fresnel invertido
+    //CookTorranceKDMetalTest(scene); // kD = metallic (papel invertido)
+    //CookTorranceKDLerpTest(scene);  // kD fixo 0.5/0.5
+    //CookTorranceGNoneTest(scene);   // G = 1 (sem shadowing-masking)
+    //CookTorranceGOneTest(scene);    // G = G1L apenas
+    CookTorranceGKelemenTest(scene);// G Kelemen: F*D / (4*VdotH^2)
 
     //--WARD--
     //WardScene(scene);
@@ -75,8 +80,8 @@ int main(int argc, const char * argv[]) {
     //const Point Eye = {0, 10, 3}, At = {0, 0, 3};
     //const Vector Up = {0, 0, 1};
 
-    // === Lateral View Point (lado direito) ===
-    //const Point Eye = {10, 0.5, 3}, At = {0, 0, 3};
+    // === Lateral View Point (lado direito, diagonal) ===
+    //const Point Eye = {8, 0.5, -2}, At = {0, 0, 3};
     //const Vector Up = {0, 1, 0};
 
     // === Diagonal View Point (frontal + topo) ===
