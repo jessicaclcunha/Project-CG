@@ -25,6 +25,7 @@
 #include "CookTorranceFInv.hpp"
 #include "OrenNayar.hpp"
 #include "Ward.hpp"
+#include "AshikhminShirley.hpp"
 
 void SpheresScene (Scene& scene, int const N_spheres);
 void SpheresTriScene (Scene& scene);
@@ -50,5 +51,10 @@ void CookTorranceNoECTest2(Scene& scene);
 void CookTorranceFConstTest(Scene& scene);
 void CookTorranceFExpTest(Scene& scene);
 void CookTorranceFInvTest(Scene& scene);
+void AshikhminShirleyScene(Scene& scene);
+void AshikhminShirleyAnisotropicScene(Scene& scene);
+void AshikhminShirleyMaterialsScene(Scene& scene);
+void AshikhminShirleyJustOneThing(Scene& scene);
+void AshikhminShirleyCubeScene(Scene& scene);
 
 #endif /* BuildScenes_hpp */
