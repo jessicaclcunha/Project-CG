@@ -7,18 +7,22 @@
 
 // Ashikhmin-Shirley (2000) — An Anisotropic Phong BRDF Model
 //
-// f_s = sqrt((nu+1)(nv+1)) / (8π)
-//     * (N·H)^(nu*cos²φ + nv*sin²φ) / ((H·L) * max(N·L, N·V))
-//     * F_Schlick(H·L, Ks)
+// f_s = sqrt((nu+2)(nv+2)) / (8π)
+//     * (N·H)^(nu*cos²φ + nv*sin²φ) / ((H·wi) * max(N·L, N·V))
+//     * F_Schlick(H·wi, Ks_brdf)
 //
-// f_d = (28*Kd)/(23π) * (1 - Ks) * [1-(1-N·L/2)^5] * [1-(1-N·V/2)^5]
+// f_d = (28*Kd)/(23π) * (1 - Rs) * [1-(1-N·L/2)^5] * [1-(1-N·V/2)^5]
 //
-// Requer tangente (T) e bitangente (B) para anisotropia real.
+// Notas de implementação:
+//   - Normalização: (nu+2)(nv+2) conforme convenção consistente com as variantes
+//   - Denominador: HdotWi * max(NdotL, NdotV) conforme paper original
+//   - Difuso inclui (1-Rs) para conservação de energia
+//   - Cap no especular (50.0) para suprimir fireflies no terminador
 
 class AshikhminShirley : public BRDF {
 public:
-    float nu;  // expoente especular ao longo da tangente  (alto = mais afiado)
-    float nv;  // expoente especular ao longo da bitangente (diferente = anisotrópico)
+    float nu;        // expoente ao longo da tangente  (alto = lóbulo afiado)
+    float nv;        // expoente ao longo da bitangente (diferente = anisotrópico)
     Vector tangent;
     bool hasTangent;
 
@@ -30,9 +34,9 @@ public:
 
         float NdotL = N.dot(wi);
         float NdotV = N.dot(wo);
-        
         if (NdotL <= 0.f || NdotV <= 0.f) return color;
 
+        // Frame de anisotropia
         Vector T, B;
         if (hasTangent) {
             float d = N.dot(tangent);
@@ -44,47 +48,57 @@ public:
             N.CoordinateSystem(&T, &B);
         }
 
+        // --- Especular ---
         if (!Ks_brdf.isZero() && (type & GLOSSY_REF)) {
             Vector H = wi + wo;
             float hlen = H.norm();
             if (hlen > 1e-6f) {
                 H = H / hlen;
 
-                float NdotH = std::max(N.dot(H), 0.f);
-                float HdotL = std::max(H.dot(wi), 1e-4f);
-                float HdotT = H.dot(T);
-                float HdotB = H.dot(B);
-                float sinSqH = std::max(1.f - NdotH * NdotH, 0.f);
+                float HdotN  = std::max(N.dot(H),  1e-4f);
+                float HdotWi = std::max(wi.dot(H), 1e-4f);
+                float HdotT  = H.dot(T);
+                float HdotB  = H.dot(B);
 
-                float exponent = (sinSqH > 1e-5f)
-                    ? (nu * HdotT * HdotT + nv * HdotB * HdotB) / sinSqH
-                    : 0.5f * (nu + nv);
+                // Expoente anisotrópico: nu*cos²φ + nv*sin²φ
+                // projectado no plano tangente de H
+                float HperpSq = HdotT * HdotT + HdotB * HdotB;
+                float exponent;
+                if (HperpSq < 1e-6f) {
+                    exponent = (nu + nv) * 0.5f;
+                } else {
+                    float cos2phi = (HdotT * HdotT) / HperpSq;
+                    exponent = nu * cos2phi + nv * (1.f - cos2phi);
+                }
                 exponent = std::min(exponent, 8000.f);
 
-                float norm  = sqrtf((nu + 1.f) * (nv + 1.f)) / (8.f * float(M_PI));
-                float D     = norm * powf(NdotH, exponent);
+                // Normalização: sqrt((nu+2)(nv+2)) / (8π)
+                float norm    = sqrtf((nu + 2.f) * (nv + 2.f)) / (8.f * float(M_PI));
+                float powTerm = powf(HdotN, exponent);
 
-                // CORRECÇÃO: denominador inclui NdotL para cancelar o cosL externo
-                // evita o pico no terminador
-                float denom = HdotL * (NdotL + NdotV - NdotL * NdotV);
-                if (denom < 1e-8f) goto skip_spec;
+                // Denominador conforme paper: HdotWi * max(NdotL, NdotV)
+                float denom = HdotWi * std::max(NdotL, NdotV);
+                if (denom >= 1e-8f) {
+                    // Fresnel de Schlick
+                    float fc = powf(1.f - HdotWi, 5.f);
+                    RGB F(Ks_brdf.R + (1.f - Ks_brdf.R) * fc,
+                          Ks_brdf.G + (1.f - Ks_brdf.G) * fc,
+                          Ks_brdf.B + (1.f - Ks_brdf.B) * fc);
 
-                float fc = powf(1.f - HdotL, 5.f);
-                RGB F(Ks_brdf.R + (1.f - Ks_brdf.R) * fc,
-                    Ks_brdf.G + (1.f - Ks_brdf.G) * fc,
-                    Ks_brdf.B + (1.f - Ks_brdf.B) * fc);
-
-                // Cap para evitar fireflies no terminador
-                float spec_val = std::min(D / denom, 50.f);
-                color += F * spec_val;
+                    // Cap para suprimir fireflies no terminador
+                    float spec_val = std::min(norm * powTerm / denom, 50.f);
+                    color += F * spec_val;
+                }
             }
         }
-        skip_spec:;
 
+        // --- Difuso com conservação de energia ---
+        // f_d = (28/23π) * Kd * (1-Rs) * [1-(1-NdotL/2)^5] * [1-(1-NdotV/2)^5]
         if (!Kd.isZero() && (type & DIFFUSE_REF)) {
+            float Rs = Ks_brdf.Y();  // luminância do especular
             float f1 = 1.f - powf(1.f - NdotL * 0.5f, 5.f);
             float f2 = 1.f - powf(1.f - NdotV * 0.5f, 5.f);
-            color += Kd * (28.f / (23.f * float(M_PI))) * f1 * f2;
+            color += Kd * ((28.f / (23.f * float(M_PI))) * (1.f - Rs) * f1 * f2);
         }
 
         return color;
