@@ -56,19 +56,26 @@ int main(int argc, const char * argv[]) {
     //CookTorranceKDLerpTest(scene);  // kD fixo 0.5/0.5
     //CookTorranceGNoneTest(scene);   // G = 1 (sem shadowing-masking)
     //CookTorranceGOneTest(scene);    // G = G1L apenas
-    CookTorranceGKelemenTest(scene);// G Kelemen: F*D / (4*VdotH^2)
+    //CookTorranceGKelemenTest(scene);// G Kelemen: F*D / (4*VdotH^2)
 
     //--WARD--
     //WardScene(scene);
     //WardJustOneThing(scene);
     //WardCubeScene(scene);
 
-    //--ASHIKHMIN-SHIRLEY--
-   //AshikhminShirleyScene(scene);
-   //AshikhminShirleyAnisotropicScene(scene);
-   //AshikhminShirleyMaterialsScene(scene);
-   //AshikhminShirleyJustOneThing(scene);
-   //AshikhminShirleyCubeScene(scene);
+    //--ASHIKHMIN-SHIRLEY -- cenas base --
+    //AshikhminShirleyScene(scene);
+    //AshikhminShirleyAnisotropicScene(scene);
+    AshikhminShirleyMaterialsScene(scene);
+    //AshikhminShirleyJustOneThing(scene);
+ 
+    //--ASHIKHMIN-SHIRLEY -- exploração de variantes --
+    //AshikhminShirleyTestStandart(scene);    // referência
+    //AshikhminShirleyFConstTest(scene);    // Fresnel constante
+    //AshikhminShirleyFInvTest(scene);      // Fresnel invertido
+    //AshikhminShirleyNoNormTest(scene);    // sem normalização do lóbulo
+    //AshikhminShirleyLambDiffTest(scene);  // difuso Lambertiano (sem CE)
+    //AshikhminShirleyNoDiffTest(scene);    // especular puro (sem difuso)
     
     
 
