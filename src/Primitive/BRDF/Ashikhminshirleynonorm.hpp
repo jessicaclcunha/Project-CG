@@ -59,7 +59,7 @@ public:
                 exponent = nu * cos2phi + nv * (1.f - cos2phi);
             }
 
-            // Sem normalização: usa apenas 1/(8π) em vez de sqrt((nu+2)(nv+2))/(8π)
+            // Sem normalização: usa apenas 1/(8π) em vez de sqrt((nu+1)(nv+1))/(8π)
             float norm    = 1.f / (8.f * float(M_PI));
             float powTerm = powf(std::max(HdotN, 0.f), exponent);
             float denom   = HdotWi * std::max(NdotL, NdotV);

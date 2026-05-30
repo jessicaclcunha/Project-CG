@@ -7,14 +7,14 @@
 
 // Ashikhmin-Shirley (2000) — An Anisotropic Phong BRDF Model
 //
-// f_s = sqrt((nu+2)(nv+2)) / (8π)
+// f_s = sqrt((nu+1)(nv+1)) / (8π)
 //     * (N·H)^(nu*cos²φ + nv*sin²φ) / ((H·wi) * max(N·L, N·V))
 //     * F_Schlick(H·wi, Ks_brdf)
 //
 // f_d = (28*Kd)/(23π) * (1 - Rs) * [1-(1-N·L/2)^5] * [1-(1-N·V/2)^5]
 //
 // Notas de implementação:
-//   - Normalização: (nu+2)(nv+2) conforme convenção consistente com as variantes
+//   - Normalização: (nu+1)(nv+1) conforme paper original
 //   - Denominador: HdotWi * max(NdotL, NdotV) conforme paper original
 //   - Difuso inclui (1-Rs) para conservação de energia
 //   - Cap no especular (50.0) para suprimir fireflies no terminador
@@ -72,8 +72,8 @@ public:
                 }
                 exponent = std::min(exponent, 8000.f);
 
-                // Normalização: sqrt((nu+2)(nv+2)) / (8π)
-                float norm    = sqrtf((nu + 2.f) * (nv + 2.f)) / (8.f * float(M_PI));
+                // Normalização: sqrt((nu+1)(nv+1)) / (8π)
+                float norm    = sqrtf((nu + 1.f) * (nv + 1.f)) / (8.f * float(M_PI));
                 float powTerm = powf(HdotN, exponent);
 
                 // Denominador conforme paper: HdotWi * max(NdotL, NdotV)

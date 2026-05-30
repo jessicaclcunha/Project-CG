@@ -64,9 +64,9 @@ int main(int argc, const char * argv[]) {
     //WardCubeScene(scene);
 
     //--ASHIKHMIN-SHIRLEY -- cenas base --
-    //AshikhminShirleyScene(scene);
+    AshikhminShirleyScene(scene);
     //AshikhminShirleyAnisotropicScene(scene);
-    AshikhminShirleyMaterialsScene(scene);
+    //AshikhminShirleyMaterialsScene(scene);
     //AshikhminShirleyJustOneThing(scene);
  
     //--ASHIKHMIN-SHIRLEY -- exploração de variantes --

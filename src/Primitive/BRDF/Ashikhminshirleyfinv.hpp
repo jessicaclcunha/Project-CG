@@ -57,7 +57,7 @@ public:
                 exponent = nu * cos2phi + nv * (1.f - cos2phi);
             }
 
-            float norm    = sqrtf((nu + 2.f) * (nv + 2.f)) / (8.f * float(M_PI));
+            float norm    = sqrtf((nu + 1.f) * (nv + 1.f)) / (8.f * float(M_PI));
             float powTerm = powf(std::max(HdotN, 0.f), exponent);
             float denom   = HdotWi * std::max(NdotL, NdotV);
             if (denom < 1e-8f) denom = 1e-8f;
