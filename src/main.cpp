@@ -44,19 +44,41 @@ int main(int argc, const char * argv[]) {
     //PhongJustOneThing (scene);
     //PhongTextureScene(scene);
 
+    // ----------------------------------------------- // -----------------------------------------------
+
     //--COOK-TORRANCE--
     //CookTorranceSphereScene(scene);
     //CookTorranceShowcase(scene);
-    //CookTorranceTestStandart(scene); // Standart: com EC
-    //CookTorranceNoECTest2(scene);   // Teste:    sem EC
+
+    //--COOK-TORRANCE-- SCENE DE CONTROLO --
+    CookTorranceTestStandart(scene); // Standart
+
+    //--COOK-TORRANCE-- EC --
+    //CookTorranceNoECTest2(scene);   // sem EC
+
+    //--COOK-TORRANCE -- alternativas de F "erradas" --
     //CookTorranceFConstTest(scene);  // Fresnel constante (F=F0)
     //CookTorranceFExpTest(scene);    // Fresnel expoente 20
     //CookTorranceFInvTest(scene);    // Fresnel invertido
+
+    //--COOK-TORRANCE -- alternativas de kd "erradas" --
     //CookTorranceKDMetalTest(scene); // kD = metallic (papel invertido)
     //CookTorranceKDLerpTest(scene);  // kD fixo 0.5/0.5
+
+    //--COOK-TORRANCE -- alternativas de G "erradas" --
     //CookTorranceGNoneTest(scene);   // G = 1 (sem shadowing-masking)
     //CookTorranceGOneTest(scene);    // G = G1L apenas
     //CookTorranceGKelemenTest(scene);// G Kelemen: F*D / (4*VdotH^2)
+
+    //--COOK-TORRANCE -- alternativas correctas de D, F, G --
+    //CookTorranceDBeckmannTest(scene);   // D Beckmann (original CT 1982): cauda mais curta que GGX
+    //CookTorranceDBlinnPhongTest(scene); // D Blinn-Phong NDF: cauda mínima, highlight abrupto
+    //CookTorranceFExactTest(scene);      // F exacto (Fresnel dieléctrico com IOR variado)
+    //CookTorranceFSGTest(scene);         // F Spherical Gaussian (Karis/Unreal): quase igual a Schlick
+    //CookTorranceGCT1982Test(scene);     // G original paper 1982: min(1, 2NdotH*NdotV/VdotH, ...)
+    //CookTorranceGSmithIBLTest(scene);   // G Smith-GGX IBL: k=roughness²/2 (mais shadow-masking)
+
+    // ----------------------------------------------- // -----------------------------------------------
 
     //--WARD--
     //WardScene(scene);
@@ -64,7 +86,7 @@ int main(int argc, const char * argv[]) {
     //WardCubeScene(scene);
 
     //--ASHIKHMIN-SHIRLEY -- cenas base --
-    AshikhminShirleyScene(scene);
+    //AshikhminShirleyScene(scene);
     //AshikhminShirleyAnisotropicScene(scene);
     //AshikhminShirleyMaterialsScene(scene);
     //AshikhminShirleyJustOneThing(scene);

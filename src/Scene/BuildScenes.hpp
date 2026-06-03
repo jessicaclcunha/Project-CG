@@ -28,6 +28,12 @@
 #include "CookTorranceGNone.hpp"
 #include "CookTorranceGOne.hpp"
 #include "CookTorranceGKelemen.hpp"
+#include "CookTorranceDBeckmann.hpp"
+#include "CookTorranceDBlinnPhong.hpp"
+#include "CookTorranceFExact.hpp"
+#include "CookTorranceFSG.hpp"
+#include "CookTorranceGCT1982.hpp"
+#include "CookTorranceGSmithIBL.hpp"
 #include "OrenNayar.hpp"
 #include "Ward.hpp"
 #include "AshikhminShirley.hpp"
@@ -66,6 +72,13 @@ void CookTorranceKDLerpTest(Scene& scene);
 void CookTorranceGNoneTest(Scene& scene);
 void CookTorranceGOneTest(Scene& scene);
 void CookTorranceGKelemenTest(Scene& scene);
+// CookTorrance — estudo de alternativas correctas de D, F e G
+void CookTorranceDBeckmannTest(Scene& scene);
+void CookTorranceDBlinnPhongTest(Scene& scene);
+void CookTorranceFExactTest(Scene& scene);
+void CookTorranceFSGTest(Scene& scene);
+void CookTorranceGCT1982Test(Scene& scene);
+void CookTorranceGSmithIBLTest(Scene& scene);
 // Ashikhmin-Shirley — cenas base
 void AshikhminShirleyScene (Scene& scene);
 void AshikhminShirleyAnisotropicScene (Scene& scene);

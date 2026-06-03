@@ -3,90 +3,81 @@
 //  RMSE
 //
 //  Created by Luis Paulo Santos on 01/04/2025.
+//  Extended with multi-metric comparison (RMSE per-channel, PSNR, MAE,
+//  max-diff, SSIM, deltaE76, histogram) and markdown report.
 //
 
 #include <iostream>
-#include <cmath>
+#include <vector>
+#include <string>
+#include <cstring>
 #include "ImagePPM.hpp"
+#include "Metrics.hpp"
 
-
-static void error_message (void) {
-    fprintf (stderr,"Utilization: RMSE <img1-fn.pmm> <ref_img-fn.pmm> [<gamma>] [<out-fn.pmm>]\n");
-    fprintf (stderr,"\t <img1-fn.pmm> and <ref_img-fn.pmm> ,must have the same dimensions\n");
-    fprintf (stderr,"\t Default gamma=0.5 \n");
-    fprintf (stderr,"\t Default output filname=\"RMSE.ppm\" \n");
+static void error_message(void) {
+    fprintf(stderr,
+        "Utilização: rmse_exec <img-variante.ppm> <img-ref.ppm> [<gamma>] [<out-diff.ppm>] [--report=<file.md>] [--title=<str>]\n"
+        "    Imagens têm de ter as mesmas dimensões.\n"
+        "    gamma default = 0.5 (aplicado à imagem-diferença).\n"
+        "    out default = RMSE.ppm\n"
+        "    --report=<file.md>  gera relatório markdown.\n"
+        "    --title=<str>       título usado no relatório.\n");
 }
 
-static void RMSE (ImagePPM in, ImagePPM in_ref, ImagePPM out, float& RMSE, float& MinMaxScaledRMSE, float& averageY, float& minY, float& maxY) {
-    
-    // compute Y average and min and max
-    averageY=0.f;
-    maxY = minY = in_ref.get(0, 0).Y();
-    for (int y=0 ; y<in_ref.H ; y++) {
-        for (int x=0 ; x<in_ref.W ; x++) {
-            float const Y = in_ref.get(x,y).Y();
-            averageY += Y;
-            if (Y>maxY) maxY = Y;
-            if (Y<minY) minY = Y;
-        }
-    }
-    averageY /= (in_ref.W*in_ref.H);
-    float const rangeY = maxY - minY;
-    
-    float RMSE_sum =0.f;
-    float MinMaxRMSE_sum =0.f;
-    for (int y=0 ; y<in_ref.H ; y++) {
-        for (int x=0 ; x<in_ref.W ; x++) {
-            float const Y_ref = in_ref.get(x,y).Y();
-            float const Y_in = in.get(x,y).Y();
-            float const SE = (Y_ref-Y_in)*(Y_ref-Y_in);
-            out.set(x, y, RGB(SE,SE,SE));
-            RMSE_sum += SE;
-            float const MinMaxY_ref = (Y_ref-minY)/rangeY;
-            float const MinMaxY_in = (Y_in-minY)/rangeY;
-            float const MinMaxSE = (MinMaxY_ref-MinMaxY_in)*(MinMaxY_ref-MinMaxY_in);
-            MinMaxRMSE_sum += MinMaxSE;
-        }
-    }
-    RMSE = sqrt(RMSE_sum)/(in_ref.W*in_ref.H);
-    MinMaxScaledRMSE = sqrt(MinMaxRMSE_sum)/(in_ref.W*in_ref.H);
+static bool starts_with(const std::string& s, const std::string& p) {
+    return s.size() >= p.size() && std::memcmp(s.data(), p.data(), p.size()) == 0;
 }
 
-int main(int argc, const char * argv[]) {
-
-    if (argc<3) {
-        error_message ();
-        return  0;
+int main(int argc, const char* argv[]) {
+    std::vector<std::string> pos;
+    std::string report;
+    std::string title;
+    for (int i = 1; i < argc; ++i) {
+        std::string a(argv[i]);
+        if (starts_with(a, "--report=")) report = a.substr(9);
+        else if (starts_with(a, "--title=")) title = a.substr(8);
+        else pos.push_back(a);
     }
-    
-    std::string img_in_fn(argv[1]);
-    std::string img_ref_fn(argv[2]);
-    float gamma = (argc>=4 ? atof(argv[3]) : 0.5f);
-    std::string img_out_fn(argc>=5 ? argv[4] : "RMSE.ppm");
+
+    if (pos.size() < 2) {
+        error_message();
+        return 1;
+    }
+
+    std::string img_in_fn  = pos[0];
+    std::string img_ref_fn = pos[1];
+    float gamma = (pos.size() >= 3) ? atof(pos[2].c_str()) : 0.5f;
+    std::string img_out_fn = (pos.size() >= 4) ? pos[3] : "RMSE.ppm";
+
     ImagePPM img_in, img_ref;
-    
-    if (!img_in.Load(img_in_fn)) return 0;
-    if (!img_ref.Load(img_ref_fn)) return 0;
-    
+    if (!img_in.Load(img_in_fn))  return 1;
+    if (!img_ref.Load(img_ref_fn)) return 1;
+
     if (img_ref.W != img_in.W || img_in.H != img_ref.H) {
-        fprintf (stderr, "The 2 input images have different sizes!\n");
-        return 0;
+        fprintf(stderr, "As 2 imagens de entrada têm dimensões diferentes!\n");
+        return 1;
     }
-    ImagePPM out(img_ref.W, img_ref.H);
-    
-    float RMSEY, MinMaxScaledRMSEY, averageY, minY, maxY;
 
-    RMSE (img_in, img_ref, out, RMSEY, MinMaxScaledRMSEY, averageY, minY,maxY);
-    out.MonoGammaCorrect(gamma);
-    
-    out.Save(img_out_fn);
-    
-    fprintf (stdout, "Reference Image : %s \n", img_ref_fn.c_str());
-    fprintf (stdout, "\tminY = %f, maxY = %f, average Y = %f\n", minY, maxY, averageY);
-    fprintf (stdout, "\tW=%d, H=%d\n", img_ref.W, img_ref.H);
-    fprintf (stdout, "ImageIn : %s\n", img_in_fn.c_str());
-    fprintf (stdout, "RMSE = %f, MinMaxScaledRMSE = %f\n", RMSEY, MinMaxScaledRMSEY);
-    fprintf (stdout, "Image Out : %s (gamma=%.2f)\n", img_out_fn.c_str(), gamma);
+    ImagePPM diff(img_ref.W, img_ref.H);
+    ImageMetrics m;
+    compute_metrics(img_in, img_ref, diff, m);
 
-    return 1;
+    diff.MonoGammaCorrect(gamma);
+    diff.Save(img_out_fn);
+
+    if (title.empty()) {
+        size_t slash = img_in_fn.find_last_of('/');
+        size_t dot   = img_in_fn.find_last_of('.');
+        size_t start = (slash == std::string::npos) ? 0 : slash + 1;
+        size_t end   = (dot == std::string::npos || dot < start) ? img_in_fn.size() : dot;
+        title = img_in_fn.substr(start, end - start);
+    }
+
+    print_metrics(m, img_in_fn, img_ref_fn, img_out_fn, gamma, report);
+
+    if (!report.empty()) {
+        write_markdown_report(report, m, title, img_in_fn, img_ref_fn, img_out_fn);
+    }
+
+    return 0;
 }

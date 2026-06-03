@@ -479,3 +479,185 @@ void CookTorranceGKelemenTest (Scene& scene) {
 
     addECTestLighting2(scene);
 }
+
+// -------------------------------------------------------------------------
+// Estudo: alternativas correctas de D (Normal Distribution Function)
+// -------------------------------------------------------------------------
+
+static int AddDBeckmannMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                             float const roughness, float const metallic) {
+    CookTorranceDBeckmann *brdf = new CookTorranceDBeckmann;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddDBlinnPhongMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                               float const roughness, float const metallic) {
+    CookTorranceDBlinnPhong *brdf = new CookTorranceDBlinnPhong;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+void CookTorranceDBeckmannTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddDBeckmannMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddDBeckmannMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddDBeckmannMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddDBeckmannMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceDBlinnPhongTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddDBlinnPhongMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddDBlinnPhongMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddDBlinnPhongMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddDBlinnPhongMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+// -------------------------------------------------------------------------
+// Estudo: alternativas correctas de F (Fresnel)
+// -------------------------------------------------------------------------
+
+static int AddFExactMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                          float const roughness, float const eta_val) {
+    CookTorranceFExact *brdf = new CookTorranceFExact;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = 0.f;
+    brdf->eta = eta_val;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddFSGMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                       float const roughness, float const metallic) {
+    CookTorranceFSG *brdf = new CookTorranceFSG;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+void CookTorranceFExactTest (Scene& scene) {
+    // 4 dieléctricos (metallic=0), roughness fixo=0.3, IOR variado
+    // Isola o efeito do índice de refracção no Fresnel exacto
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd(0.10f, 0.20f, 0.80f);
+
+    int m1 = AddFExactMat(scene, Ka, Kd, Ks, 0.3f, 1.33f);  // água
+    int m2 = AddFExactMat(scene, Ka, Kd, Ks, 0.3f, 1.50f);  // vidro
+    int m3 = AddFExactMat(scene, Ka, Kd, Ks, 0.3f, 1.77f);  // safira
+    int m4 = AddFExactMat(scene, Ka, Kd, Ks, 0.3f, 2.50f);  // IOR alto
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceFSGTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddFSGMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddFSGMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddFSGMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddFSGMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+// -------------------------------------------------------------------------
+// Estudo: alternativas correctas de G (Geometry / Shadowing-Masking)
+// -------------------------------------------------------------------------
+
+static int AddGCT1982Mat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                           float const roughness, float const metallic) {
+    CookTorranceGCT1982 *brdf = new CookTorranceGCT1982;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+static int AddGSmithIBLMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                              float const roughness, float const metallic) {
+    CookTorranceGSmithIBL *brdf = new CookTorranceGSmithIBL;
+    brdf->Ka = Ka; brdf->Kd = Kd; brdf->Ks = RGB(0.f,0.f,0.f);
+    brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
+    brdf->roughness = roughness; brdf->metallic = metallic;
+    return scene.AddMaterial(brdf);
+}
+
+void CookTorranceGCT1982Test (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddGCT1982Mat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddGCT1982Mat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddGCT1982Mat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddGCT1982Mat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}
+
+void CookTorranceGSmithIBLTest (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+
+    int m1 = AddGSmithIBLMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddGSmithIBLMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m3 = AddGSmithIBLMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m4 = AddGSmithIBLMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+
+    AddSphere(scene, Point(-3.f, 0.f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
+
+    addECTestLighting2(scene);
+}

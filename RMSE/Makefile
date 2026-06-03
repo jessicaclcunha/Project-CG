@@ -11,9 +11,10 @@ EXEC := rmse_exec
 
 INCLUDE  := -I$(TARGET)/Image -I$(TARGET)/utils -I$(TARGET)/Image/ToneMapper -I$(TARGET)/Image/PostFilter
 
-SRC      :=                      \
-	$(wildcard $(TARGET)/*.cpp) \
-	$(wildcard $(TARGET)/Image/*.cpp)
+SRC      :=                       \
+	$(wildcard $(TARGET)/*.cpp)   \
+	$(wildcard $(TARGET)/Image/*.cpp) \
+	$(wildcard $(TARGET)/utils/*.cpp)
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 DEPENDENCIES := $(OBJECTS:.o=.d)
