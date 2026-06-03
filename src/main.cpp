@@ -34,9 +34,6 @@ int main(int argc, const char * argv[]) {
     const int H= 640;
 
     img = new ImagePPM(W,H);
-    
-    /* Scenes*/
-    //DLightChallenge(scene);
 
     //--PHONG--
     //PhongSphereScene(scene);
@@ -51,7 +48,7 @@ int main(int argc, const char * argv[]) {
     //CookTorranceShowcase(scene);
 
     //--COOK-TORRANCE-- SCENE DE CONTROLO --
-    CookTorranceTestStandart(scene); // Standart
+    //CookTorranceTestStandart(scene); // Standart
 
     //--COOK-TORRANCE-- EC --
     //CookTorranceNoECTest2(scene);   // sem EC
@@ -80,8 +77,27 @@ int main(int argc, const char * argv[]) {
 
     // ----------------------------------------------- // -----------------------------------------------
 
+    //--OREN-NAYAR -- cena base (demo) --
+    //OrenNayarLambertVsON(scene);        // contraste Lambert vs ON — luz de farol
+
+    //--OREN-NAYAR -- SCENE DE CONTROLO --
+    //OrenNayarTestStandart(scene);       // Standart (ON simplificado)
+
+    //--OREN-NAYAR -- variantes "erradas" --
+    //OrenNayarLambertTest(scene);        // Lambert puro (sigma=0): tudo o que o ON acrescenta
+    //OrenNayarNoBTest(scene);            // sem termo B (sem retroreflexão)
+    //OrenNayarAFixoTest(scene);          // A=1 fixo (sem escurecimento)
+    //OrenNayarNoClampTest(scene);        // sem clamp do azimute (cosΔφ negativo)
+
+    //--OREN-NAYAR -- alternativas correctas --
+    //OrenNayarFujiiTest(scene);          // Fujii energy-preserving (quase igual ao standard)
+    //OrenNayarFullTest(scene);           // ON completo 1994 (C1/C2/C3)
+    //OrenNayarFullInterTest(scene);      // Full + inter-reflexão L2 (Kd²)
+
+    // ----------------------------------------------- // -----------------------------------------------
+
     //--WARD--
-    //WardScene(scene);
+    WardScene(scene);
     //WardJustOneThing(scene);
     //WardCubeScene(scene);
 

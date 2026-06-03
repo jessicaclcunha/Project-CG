@@ -28,3 +28,18 @@ Tempo CPU em segundos reportado pelo `main.cpp` no final de cada `make run`
 
 ---
 
+## Oren-Nayar
+
+| Estudo | Tempo (s) |
+|---|---|
+| Standard (OrenNayarTestStandart) | 7.812 secs |
+| Lambert (OrenNayarLambertTest) | 7.798 secs |
+| NoB — sem retroreflexão (OrenNayarNoBTest) | 7.839 secs |
+| AFixo — sem escurecimento (OrenNayarAFixoTest) | 8.048 secs |
+| NoClamp — azimute negativo (OrenNayarNoClampTest) | 7.962 secs |
+| Fujii — energy-preserving (OrenNayarFujiiTest) | 7.815 secs |
+| Full — C1/C2/C3 (OrenNayarFullTest) | 7.980 secs |
+| FullInter — Full + L2 (OrenNayarFullInterTest) | 7.853 secs |
+
+---
+

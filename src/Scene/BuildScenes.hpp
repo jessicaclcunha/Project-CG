@@ -35,6 +35,12 @@
 #include "CookTorranceGCT1982.hpp"
 #include "CookTorranceGSmithIBL.hpp"
 #include "OrenNayar.hpp"
+#include "OrenNayarNoB.hpp"
+#include "OrenNayarAFixo.hpp"
+#include "OrenNayarNoClamp.hpp"
+#include "OrenNayarFujii.hpp"
+#include "OrenNayarFull.hpp"
+#include "OrenNayarFullInter.hpp"
 #include "Ward.hpp"
 #include "AshikhminShirley.hpp"
 #include "AshikhminShirleyFConst.hpp"
@@ -57,8 +63,16 @@ void PhongTextureScene (Scene& scene);
 void CookTorranceSphereScene (Scene& scene);
 void CookTorranceTextureScene (Scene& scene);
 void CookTorranceShowcase (Scene& scene);
-void OrenNayarScene (Scene& scene);
-void OrenNayarJustOneThing (Scene& scene);
+void OrenNayarLambertVsON (Scene& scene);
+// Oren-Nayar — estudo de variantes erradas + alternativas correctas
+void OrenNayarTestStandart (Scene& scene);
+void OrenNayarLambertTest (Scene& scene);
+void OrenNayarNoBTest (Scene& scene);
+void OrenNayarAFixoTest (Scene& scene);
+void OrenNayarNoClampTest (Scene& scene);
+void OrenNayarFujiiTest (Scene& scene);
+void OrenNayarFullTest (Scene& scene);
+void OrenNayarFullInterTest (Scene& scene);
 void WardScene(Scene& scene);
 void WardJustOneThing(Scene& scene);
 void WardCubeScene(Scene& scene);
