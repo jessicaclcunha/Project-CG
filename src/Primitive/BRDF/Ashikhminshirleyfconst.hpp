@@ -66,7 +66,9 @@ public:
             // F = Ks_brdf constante — sem variação angular (Schlick removido)
             RGB F = Ks_brdf;
 
-            color += F * (norm * powTerm / denom);
+            // Cap para suprimir fireflies no terminador (igual ao base)
+            float spec_val = std::min(norm * powTerm / denom, 50.f);
+            color += F * spec_val;
         }
 
         if (!Kd.isZero() && (type & DIFFUSE_REF)) {

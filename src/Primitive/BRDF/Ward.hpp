@@ -7,10 +7,12 @@
 
 // Ward (1992) — Measuring and Modeling Anisotropic Reflection
 //
-// Fórmula Ward normalizada (Geisler-Moroder & Dür 2010):
+// Fórmula Ward ORIGINAL 1992 (normalização com média geométrica √(NdotL·NdotV)):
 //
 //   f_r = Ks * exp( -(HdotT²/αx² + HdotB²/αy²) / NdotH² )
 //             / ( 4π · αx · αy · sqrt(NdotL · NdotV) )
+//
+// Nota: a variante Geisler-Moroder & Dür 2010 (denom (NdotH)^4) está em WardGMD.hpp.
 
 class Ward : public BRDF {
 public:

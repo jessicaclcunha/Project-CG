@@ -48,7 +48,7 @@ int main(int argc, const char * argv[]) {
     //CookTorranceShowcase(scene);
 
     //--COOK-TORRANCE-- SCENE DE CONTROLO --
-    //CookTorranceTestStandart(scene); // Standart
+    CookTorranceTestStandart(scene); // Standart
 
     //--COOK-TORRANCE-- EC --
     //CookTorranceNoECTest2(scene);   // sem EC
@@ -108,7 +108,7 @@ int main(int argc, const char * argv[]) {
     //--WARD -- alternativas correctas --
     //WardDurTest(scene);                // Dür 2006: denom linear (NdotL·NdotV)
     //WardGMDTest(scene);                // Geisler-Moroder & Dür 2010: denom (NdotH)^4
-    WardFresnelTest(scene);            // + Fresnel de Schlick no Ks
+    //WardFresnelTest(scene);            // + Fresnel de Schlick no Ks
 
     // ----------------------------------------------- // -----------------------------------------------
 
@@ -116,17 +116,22 @@ int main(int argc, const char * argv[]) {
     //AshikhminShirleyScene(scene);
     //AshikhminShirleyAnisotropicScene(scene);
     //AshikhminShirleyMaterialsScene(scene);
-    //AshikhminShirleyJustOneThing(scene);
- 
-    //--ASHIKHMIN-SHIRLEY -- exploração de variantes --
+
+    //--WARD -- setup do estudo --
     //AshikhminShirleyTestStandart(scene);    // referência
+
+    //--ASHIKHMIN-SHIRLEY -- exploração de variantes --
     //AshikhminShirleyFConstTest(scene);    // Fresnel constante
     //AshikhminShirleyFInvTest(scene);      // Fresnel invertido
     //AshikhminShirleyNoNormTest(scene);    // sem normalização do lóbulo
     //AshikhminShirleyLambDiffTest(scene);  // difuso Lambertiano (sem CE)
     //AshikhminShirleyNoDiffTest(scene);    // especular puro (sem difuso)
-    
-    
+
+    //--ASHIKHMIN-SHIRLEY -- alternativas correctas --
+    //AshikhminShirleyFExactTest(scene);    // Fresnel dieléctrico exacto
+    //AshikhminShirleyFSGTest(scene);       // Fresnel spherical-gaussian
+
+
 
     //  === Default View Point (frontal) ===
     const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};

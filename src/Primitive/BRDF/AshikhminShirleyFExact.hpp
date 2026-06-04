@@ -1,25 +1,34 @@
-#ifndef AshikhminShirleyNoNorm_hpp
-#define AshikhminShirleyNoNorm_hpp
+#ifndef AshikhminShirleyFExact_hpp
+#define AshikhminShirleyFExact_hpp
 
 #include "BRDF.hpp"
 #include <cmath>
 #include <algorithm>
 
-// Ashikhmin-Shirley SEM fator de normalização: sem sqrt((nu+1)(nv+1))/(8π).
-// Diferença face ao original: o lóbulo especular NÃO é normalizado pela
-// área de projeção — materiais com nu/nv altos ficam artificialmente mais
-// brilhantes em vez de conservarem energia ao concentrar o lóbulo.
-// Efeito visual: nu/nv altos → highlight cada vez mais intenso (não físico);
-//                nu/nv baixos → resultado próximo do correto.
-class AshikhminShirleyNoNorm : public BRDF {
+// Ashikhmin-Shirley com Fresnel DIELÉCTRICO EXACTO (alternativa correcta).
+// Substitui a aproximação de Schlick pelas equações exactas de Fresnel para
+// dieléctricos, usando this->eta (IOR). Tudo o resto (lóbulo, normalização,
+// difuso) fica igual ao base.
+//
+//   cosI = HdotWi
+//   sinT² = (1 − cosI²)/η²        [TIR se sinT² ≥ 1 → F = 1]
+//   Rs = (cosI − η·cosT)/(cosI + η·cosT)
+//   Rp = (η·cosI − cosT)/(η·cosI + cosT)
+//   F  = ½(Rs² + Rp²)            [escalar]
+//
+// Nota: o Fresnel dieléctrico é escalar → correcto para os DIELÉCTRICOS
+// (plásticos). Nos metais perde a cor do reflexo (dourado → esbranquiçado),
+// pois metal precisa de Fresnel complexo/colorido — essa limitação é, em si,
+// o ponto pedagógico a observar.
+class AshikhminShirleyFExact : public BRDF {
 public:
     float nu, nv;
     Vector tangent;
     bool hasTangent;
 
-    AshikhminShirleyNoNorm()
+    AshikhminShirleyFExact()
         : nu(100.f), nv(100.f),
-          tangent(Vector(0.f, 0.f, 0.f)), hasTangent(false) {}
+          tangent(Vector(0.f, 0.f, 0.f)), hasTangent(false) { eta = 1.5f; }
 
     RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {
         RGB color(0.f, 0.f, 0.f);
@@ -59,16 +68,24 @@ public:
                 exponent = nu * cos2phi + nv * (1.f - cos2phi);
             }
 
-            // Sem normalização: usa apenas 1/(8π) em vez de sqrt((nu+1)(nv+1))/(8π)
-            float norm    = 1.f / (8.f * float(M_PI));
+            float norm    = sqrtf((nu + 1.f) * (nv + 1.f)) / (8.f * float(M_PI));
             float powTerm = powf(std::max(HdotN, 0.f), exponent);
             float denom   = HdotWi * std::max(NdotL, NdotV);
             if (denom < 1e-8f) denom = 1e-8f;
 
-            float f_schlick = powf(1.f - HdotWi, 5.f);
-            RGB F(Ks_brdf.R + (1.f - Ks_brdf.R) * f_schlick,
-                  Ks_brdf.G + (1.f - Ks_brdf.G) * f_schlick,
-                  Ks_brdf.B + (1.f - Ks_brdf.B) * f_schlick);
+            // Fresnel dieléctrico exacto (escalar) — substitui Schlick
+            float cosI  = HdotWi;
+            float sinT2 = (1.f - cosI * cosI) / std::max(eta * eta, 1e-6f);
+            float f_val;
+            if (sinT2 >= 1.f) {
+                f_val = 1.f;  // reflexão total interna
+            } else {
+                float cosT = sqrtf(1.f - sinT2);
+                float Rs = (cosI - eta * cosT) / std::max(cosI + eta * cosT, 1e-6f);
+                float Rp = (eta * cosI - cosT) / std::max(eta * cosI + cosT, 1e-6f);
+                f_val = std::min(1.f, std::max(0.f, 0.5f * (Rs * Rs + Rp * Rp)));
+            }
+            RGB F(f_val, f_val, f_val);
 
             // Cap para suprimir fireflies no terminador (igual ao base)
             float spec_val = std::min(norm * powTerm / denom, 50.f);
@@ -88,4 +105,4 @@ public:
     }
 };
 
-#endif /* AshikhminShirleyNoNorm_hpp */
+#endif /* AshikhminShirleyFExact_hpp */

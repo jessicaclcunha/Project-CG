@@ -1,23 +1,26 @@
-#ifndef AshikhminShirleyNoNorm_hpp
-#define AshikhminShirleyNoNorm_hpp
+#ifndef AshikhminShirleyFSG_hpp
+#define AshikhminShirleyFSG_hpp
 
 #include "BRDF.hpp"
 #include <cmath>
 #include <algorithm>
 
-// Ashikhmin-Shirley SEM fator de normalização: sem sqrt((nu+1)(nv+1))/(8π).
-// Diferença face ao original: o lóbulo especular NÃO é normalizado pela
-// área de projeção — materiais com nu/nv altos ficam artificialmente mais
-// brilhantes em vez de conservarem energia ao concentrar o lóbulo.
-// Efeito visual: nu/nv altos → highlight cada vez mais intenso (não físico);
-//                nu/nv baixos → resultado próximo do correto.
-class AshikhminShirleyNoNorm : public BRDF {
+// Ashikhmin-Shirley com Fresnel SPHERICAL GAUSSIAN (Karis 2013) — alternativa
+// correcta. Substitui o (1−HdotWi)^5 de Schlick pela aproximação SG, mantendo
+// F0 = Ks por canal (preserva a cor). Tudo o resto fica igual ao base.
+//
+//   Schlick:  F = Ks + (1−Ks)·(1−HdotWi)^5
+//   SG Karis: F = Ks + (1−Ks)·2^((−5.55473·HdotWi − 6.98316)·HdotWi)
+//
+// Resultado quase idêntico ao base — valida Schlick como aproximação robusta
+// (a forma exacta da curva de Fresnel tem pouco impacto visual).
+class AshikhminShirleyFSG : public BRDF {
 public:
     float nu, nv;
     Vector tangent;
     bool hasTangent;
 
-    AshikhminShirleyNoNorm()
+    AshikhminShirleyFSG()
         : nu(100.f), nv(100.f),
           tangent(Vector(0.f, 0.f, 0.f)), hasTangent(false) {}
 
@@ -59,16 +62,16 @@ public:
                 exponent = nu * cos2phi + nv * (1.f - cos2phi);
             }
 
-            // Sem normalização: usa apenas 1/(8π) em vez de sqrt((nu+1)(nv+1))/(8π)
-            float norm    = 1.f / (8.f * float(M_PI));
+            float norm    = sqrtf((nu + 1.f) * (nv + 1.f)) / (8.f * float(M_PI));
             float powTerm = powf(std::max(HdotN, 0.f), exponent);
             float denom   = HdotWi * std::max(NdotL, NdotV);
             if (denom < 1e-8f) denom = 1e-8f;
 
-            float f_schlick = powf(1.f - HdotWi, 5.f);
-            RGB F(Ks_brdf.R + (1.f - Ks_brdf.R) * f_schlick,
-                  Ks_brdf.G + (1.f - Ks_brdf.G) * f_schlick,
-                  Ks_brdf.B + (1.f - Ks_brdf.B) * f_schlick);
+            // Spherical Gaussian Schlick (Karis 2013): 2^x = exp(x·ln2)
+            float f_sg = expf((-5.55473f * HdotWi - 6.98316f) * HdotWi * 0.6931472f);
+            RGB F(Ks_brdf.R + (1.f - Ks_brdf.R) * f_sg,
+                  Ks_brdf.G + (1.f - Ks_brdf.G) * f_sg,
+                  Ks_brdf.B + (1.f - Ks_brdf.B) * f_sg);
 
             // Cap para suprimir fireflies no terminador (igual ao base)
             float spec_val = std::min(norm * powTerm / denom, 50.f);
@@ -88,4 +91,4 @@ public:
     }
 };
 
-#endif /* AshikhminShirleyNoNorm_hpp */
+#endif /* AshikhminShirleyFSG_hpp */

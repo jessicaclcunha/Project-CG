@@ -14,22 +14,20 @@
 #include "AshikhminShirleyNoNorm.hpp"
 #include "AshikhminShirleyLambDiff.hpp"
 #include "AshikhminShirleyNoDiff.hpp"
+#include "AshikhminShirleyFExact.hpp"
+#include "AshikhminShirleyFSG.hpp"
 
 // -------------------------------------------------------------------------
 // Iluminação padrão para cenas de teste de variantes
-// Igual à usada em CookTorrance: 1 AreaLight key + 1 PointLight fill + ambient + chão
+// EXPERIÊNCIA point light (estilo Ward): key pontual concentrada → highlight
+// nítido, sem a fragmentação do painel da area light. Sem fill (evita 2º
+// highlight que confundiria o streak anisotrópico). Para reverter, voltar à
+// AreaLight + fill (rewind do git).
 // -------------------------------------------------------------------------
 static void addASTestLighting(Scene& scene, float floorY = -0.9f) {
-    Vector nDown(0.f, -1.f, 0.f);
-    AreaLight *key0 = new AreaLight(RGB(400.f, 400.f, 400.f),
-        Point(-1.5f, 5.f, 2.f), Point(1.5f, 5.f, 2.f), Point(1.5f, 5.f, 4.f), nDown);
-    AreaLight *key1 = new AreaLight(RGB(400.f, 400.f, 400.f),
-        Point(-1.5f, 5.f, 2.f), Point(1.5f, 5.f, 4.f), Point(-1.5f, 5.f, 4.f), nDown);
-    scene.lights.push_back(key0); scene.numLights++;
-    scene.lights.push_back(key1); scene.numLights++;
-
-    PointLight *fill = new PointLight(RGB(100.f, 100.f, 100.f), Point(-5.f, 2.f, 1.f));
-    scene.lights.push_back(fill); scene.numLights++;
+    // Key pontual frontal-superior (entre câmara e esferas) → highlight na face visível
+    PointLight *key = new PointLight(RGB(500.f, 500.f, 500.f), Point(0.f, 4.f, 0.f));
+    scene.lights.push_back(key); scene.numLights++;
 
     AmbientLight *ambient = new AmbientLight(RGB(0.02f, 0.02f, 0.02f));
     scene.lights.push_back(ambient); scene.numLights++;
@@ -55,64 +53,16 @@ static int AddASMat(Scene& scene,
     return scene.AddMaterial(brdf);
 }
 
-static int AddASFConstMat(Scene& scene,
+// Helper genérico — instancia qualquer BRDF tipo-AS (mesmos campos).
+// Usado pelo estudo de variantes (o standard e as 5 variantes partilham
+// exactamente os mesmos materiais via buildASStudyScene<T>).
+template <typename T>
+static int AddASVariantMat(Scene& scene,
                            RGB const Ka, RGB const Kd, RGB const Ks,
                            float nu, float nv,
-                           Vector tangent = Vector(0.f,0.f,0.f), bool hasTangent = false)
+                           Vector const tangent, bool const hasTangent)
 {
-    AshikhminShirleyFConst *brdf = new AshikhminShirleyFConst;
-    brdf->Ka = Ka; brdf->Kd = Kd;
-    brdf->Ks = RGB(0.f,0.f,0.f); brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
-    brdf->nu = std::max(1.f, nu); brdf->nv = std::max(1.f, nv);
-    brdf->tangent = tangent; brdf->hasTangent = hasTangent;
-    return scene.AddMaterial(brdf);
-}
-
-static int AddASFInvMat(Scene& scene,
-                         RGB const Ka, RGB const Kd, RGB const Ks,
-                         float nu, float nv,
-                         Vector tangent = Vector(0.f,0.f,0.f), bool hasTangent = false)
-{
-    AshikhminShirleyFInv *brdf = new AshikhminShirleyFInv;
-    brdf->Ka = Ka; brdf->Kd = Kd;
-    brdf->Ks = RGB(0.f,0.f,0.f); brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
-    brdf->nu = std::max(1.f, nu); brdf->nv = std::max(1.f, nv);
-    brdf->tangent = tangent; brdf->hasTangent = hasTangent;
-    return scene.AddMaterial(brdf);
-}
-
-static int AddASNoNormMat(Scene& scene,
-                           RGB const Ka, RGB const Kd, RGB const Ks,
-                           float nu, float nv,
-                           Vector tangent = Vector(0.f,0.f,0.f), bool hasTangent = false)
-{
-    AshikhminShirleyNoNorm *brdf = new AshikhminShirleyNoNorm;
-    brdf->Ka = Ka; brdf->Kd = Kd;
-    brdf->Ks = RGB(0.f,0.f,0.f); brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
-    brdf->nu = std::max(1.f, nu); brdf->nv = std::max(1.f, nv);
-    brdf->tangent = tangent; brdf->hasTangent = hasTangent;
-    return scene.AddMaterial(brdf);
-}
-
-static int AddASLambDiffMat(Scene& scene,
-                              RGB const Ka, RGB const Kd, RGB const Ks,
-                              float nu, float nv,
-                              Vector tangent = Vector(0.f,0.f,0.f), bool hasTangent = false)
-{
-    AshikhminShirleyLambDiff *brdf = new AshikhminShirleyLambDiff;
-    brdf->Ka = Ka; brdf->Kd = Kd;
-    brdf->Ks = RGB(0.f,0.f,0.f); brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
-    brdf->nu = std::max(1.f, nu); brdf->nv = std::max(1.f, nv);
-    brdf->tangent = tangent; brdf->hasTangent = hasTangent;
-    return scene.AddMaterial(brdf);
-}
-
-static int AddASNoDiffMat(Scene& scene,
-                           RGB const Ka, RGB const Kd, RGB const Ks,
-                           float nu, float nv,
-                           Vector tangent = Vector(0.f,0.f,0.f), bool hasTangent = false)
-{
-    AshikhminShirleyNoDiff *brdf = new AshikhminShirleyNoDiff;
+    T *brdf = new T;
     brdf->Ka = Ka; brdf->Kd = Kd;
     brdf->Ks = RGB(0.f,0.f,0.f); brdf->Ks_brdf = Ks; brdf->Kt = RGB(0.f,0.f,0.f);
     brdf->nu = std::max(1.f, nu); brdf->nv = std::max(1.f, nv);
@@ -194,20 +144,6 @@ void AshikhminShirleyMaterialsScene(Scene& scene)
 }
 
 // =========================================================================
-// AshikhminShirleyJustOneThing (mantida — esfera única)
-// =========================================================================
-void AshikhminShirleyJustOneThing(Scene& scene)
-{
-    RGB const Ka(0.04f, 0.04f, 0.04f);
-    RGB const Kd(0.05f, 0.04f, 0.02f);
-    RGB const Ks(1.00f, 0.71f, 0.29f);
-    int const mat = AddASMat(scene, Ka, Kd, Ks, 500.f, 10.f, Vector(1.f, 0.f, 0.f), true);
-
-    AddSphere(scene, Point(0.f, 0.f, 3.f), 0.8f, mat);
-    addASTestLighting(scene);
-}
-
-// =========================================================================
 // CENAS DE TESTE DE VARIANTES — seguem o padrão CookTorrance
 //
 // Cada cena coloca 4 esferas com o mesmo material base mas variando
@@ -229,122 +165,45 @@ static void addAS4Spheres(Scene& scene, int m1, int m2, int m3, int m4) {
     AddSphere(scene, Point( 3.f, 0.f, 3.f), 0.8f, m4);
 }
 
-// Referência: Ashikhmin-Shirley padrão com os 4 materiais de teste
-void AshikhminShirleyTestStandart(Scene& scene)
+// Builder partilhado — os 4 materiais do estudo com a BRDF T.
+// O standard e as 5 variantes chamam isto, garantindo materiais IDÊNTICOS
+// (só muda a classe BRDF) → o RMSE mede apenas a diferença do modelo.
+//   m1: plástico azul,  nu=nv=10,  Ks branco
+//   m2: plástico azul,  nu=nv=80,  Ks branco
+//   m3: metal escovado, nu=500 nv=10, tangente horizontal, Ks dourado (aniso)
+//   m4: metal polido,   nu=nv=1000, Ks dourado
+template <typename BRDFType>
+static void buildASStudyScene(Scene& scene)
 {
     RGB const Ka(0.02f, 0.02f, 0.02f);
     RGB const Kd_diel (0.10f, 0.20f, 0.80f);  // plástico azul
-    RGB const Kd_metal(1.00f, 0.71f, 0.29f);  // ouro
-    RGB const Ks(0.90f, 0.75f, 0.50f);        // especular dourado
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);  // ouro — difuso vivo p/ corpo visível
+                                              // (Kd=0 seria "metal físico" mas, sem IBL,
+                                              //  daria esfera preta só com o highlight)
+    RGB const Ks_diel (0.50f, 0.50f, 0.50f);  // especular dielétrico → reflexo BRANCO
+    RGB const Ks_metal(0.90f, 0.75f, 0.50f);  // especular metálico → reflexo dourado
+    Vector const T0(0.f, 0.f, 0.f);
     Vector const T(1.f, 0.f, 0.f);
 
-    int m1 = AddASMat(scene, Ka, Kd_diel,  Ks,   10.f,   10.f);
-    int m2 = AddASMat(scene, Ka, Kd_diel,  Ks,   80.f,   80.f);
-    int m3 = AddASMat(scene, Ka, Kd_metal, Ks,  500.f,   10.f, T, true);
-    int m4 = AddASMat(scene, Ka, Kd_metal, Ks, 1000.f, 1000.f);
+    int m1 = AddASVariantMat<BRDFType>(scene, Ka, Kd_diel,  Ks_diel,    10.f,   10.f, T0, false);
+    int m2 = AddASVariantMat<BRDFType>(scene, Ka, Kd_diel,  Ks_diel,    80.f,   80.f, T0, false);
+    int m3 = AddASVariantMat<BRDFType>(scene, Ka, Kd_metal, Ks_metal,  500.f,   10.f, T,  true);
+    int m4 = AddASVariantMat<BRDFType>(scene, Ka, Kd_metal, Ks_metal, 1000.f, 1000.f, T0, false);
 
     addAS4Spheres(scene, m1, m2, m3, m4);
     addASTestLighting(scene);
 }
 
-// Teste 1: Fresnel CONSTANTE (F = F0 sem variação angular)
-// Expectativa: sem "rim light" dourado nas bordas — highlight mais plano,
-//              bordo escuro em vez de claro em materiais dielétricos.
-void AshikhminShirleyFConstTest(Scene& scene)
-{
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
-    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
-    RGB const Ks(0.90f, 0.75f, 0.50f);
-    Vector const T(1.f, 0.f, 0.f);
+// Referência do estudo
+void AshikhminShirleyTestStandart(Scene& scene) { buildASStudyScene<AshikhminShirley>(scene); }
 
-    int m1 = AddASFConstMat(scene, Ka, Kd_diel,  Ks,   10.f,   10.f);
-    int m2 = AddASFConstMat(scene, Ka, Kd_diel,  Ks,   80.f,   80.f);
-    int m3 = AddASFConstMat(scene, Ka, Kd_metal, Ks,  500.f,   10.f, T, true);
-    int m4 = AddASFConstMat(scene, Ka, Kd_metal, Ks, 1000.f, 1000.f);
+// Variantes (mesma cena, só muda a BRDF)
+void AshikhminShirleyFConstTest  (Scene& scene) { buildASStudyScene<AshikhminShirleyFConst>(scene); }   // Fresnel constante
+void AshikhminShirleyFInvTest    (Scene& scene) { buildASStudyScene<AshikhminShirleyFInv>(scene); }     // Fresnel invertido
+void AshikhminShirleyNoNormTest  (Scene& scene) { buildASStudyScene<AshikhminShirleyNoNorm>(scene); }   // sem normalização √((nu+1)(nv+1))
+void AshikhminShirleyLambDiffTest(Scene& scene) { buildASStudyScene<AshikhminShirleyLambDiff>(scene); } // difuso Lambertiano (sem CE)
+void AshikhminShirleyNoDiffTest  (Scene& scene) { buildASStudyScene<AshikhminShirleyNoDiff>(scene); }   // especular puro (sem difuso)
 
-    addAS4Spheres(scene, m1, m2, m3, m4);
-    addASTestLighting(scene);
-}
-
-// Teste 2: Fresnel INVERTIDO (F máximo ao centro, mínimo nas bordas)
-// Expectativa: highlight brilhante ao centro, borda escura —
-//              efeito visualmente invertido face ao comportamento físico.
-void AshikhminShirleyFInvTest(Scene& scene)
-{
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
-    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
-    RGB const Ks(0.90f, 0.75f, 0.50f);
-    Vector const T(1.f, 0.f, 0.f);
-
-    int m1 = AddASFInvMat(scene, Ka, Kd_diel,  Ks,   10.f,   10.f);
-    int m2 = AddASFInvMat(scene, Ka, Kd_diel,  Ks,   80.f,   80.f);
-    int m3 = AddASFInvMat(scene, Ka, Kd_metal, Ks,  500.f,   10.f, T, true);
-    int m4 = AddASFInvMat(scene, Ka, Kd_metal, Ks, 1000.f, 1000.f);
-
-    addAS4Spheres(scene, m1, m2, m3, m4);
-    addASTestLighting(scene);
-}
-
-// Teste 3: SEM fator de normalização sqrt((nu+2)(nv+2))
-// Expectativa: materiais com nu/nv altos ficam cada vez mais brilhantes
-//              (energy not conserved) — curva inversa à correcta.
-void AshikhminShirleyNoNormTest(Scene& scene)
-{
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
-    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
-    RGB const Ks(0.90f, 0.75f, 0.50f);
-    Vector const T(1.f, 0.f, 0.f);
-
-    int m1 = AddASNoNormMat(scene, Ka, Kd_diel,  Ks,   10.f,   10.f);
-    int m2 = AddASNoNormMat(scene, Ka, Kd_diel,  Ks,   80.f,   80.f);
-    int m3 = AddASNoNormMat(scene, Ka, Kd_metal, Ks,  500.f,   10.f, T, true);
-    int m4 = AddASNoNormMat(scene, Ka, Kd_metal, Ks, 1000.f, 1000.f);
-
-    addAS4Spheres(scene, m1, m2, m3, m4);
-    addASTestLighting(scene);
-}
-
-// Teste 4: difuso LAMBERTIANO simples (sem acoplamento ao especular)
-// Expectativa: zonas fora do highlight são mais claras que o correcto
-//              pois o difuso não é atenuado pelo Rs — violação de energia
-//              visível em materiais com Ks alto (ouro/metal).
-void AshikhminShirleyLambDiffTest(Scene& scene)
-{
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
-    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
-    RGB const Ks(0.90f, 0.75f, 0.50f);
-    Vector const T(1.f, 0.f, 0.f);
-
-    int m1 = AddASLambDiffMat(scene, Ka, Kd_diel,  Ks,   10.f,   10.f);
-    int m2 = AddASLambDiffMat(scene, Ka, Kd_diel,  Ks,   80.f,   80.f);
-    int m3 = AddASLambDiffMat(scene, Ka, Kd_metal, Ks,  500.f,   10.f, T, true);
-    int m4 = AddASLambDiffMat(scene, Ka, Kd_metal, Ks, 1000.f, 1000.f);
-
-    addAS4Spheres(scene, m1, m2, m3, m4);
-    addASTestLighting(scene);
-}
-
-// Teste 5: SEM componente difusa (especular puro)
-// Expectativa: zonas fora do highlight ficam pretas — isola o lóbulo
-//              especular; o padrão anisotrópico fica mais legível.
-//              Aproxima-se de um condutor puro (metal sem difuso).
-void AshikhminShirleyNoDiffTest(Scene& scene)
-{
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
-    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
-    RGB const Ks(0.90f, 0.75f, 0.50f);
-    Vector const T(1.f, 0.f, 0.f);
-
-    int m1 = AddASNoDiffMat(scene, Ka, Kd_diel,  Ks,   10.f,   10.f);
-    int m2 = AddASNoDiffMat(scene, Ka, Kd_diel,  Ks,   80.f,   80.f);
-    int m3 = AddASNoDiffMat(scene, Ka, Kd_metal, Ks,  500.f,   10.f, T, true);
-    int m4 = AddASNoDiffMat(scene, Ka, Kd_metal, Ks, 1000.f, 1000.f);
-
-    addAS4Spheres(scene, m1, m2, m3, m4);
-    addASTestLighting(scene);
-}
+// Alternativas correctas (formulações de Fresnel legítimas)
+void AshikhminShirleyFExactTest  (Scene& scene) { buildASStudyScene<AshikhminShirleyFExact>(scene); }   // Fresnel dieléctrico exacto
+void AshikhminShirleyFSGTest     (Scene& scene) { buildASStudyScene<AshikhminShirleyFSG>(scene); }      // Fresnel spherical-gaussian

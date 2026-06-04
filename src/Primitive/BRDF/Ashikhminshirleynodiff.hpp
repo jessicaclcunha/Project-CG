@@ -70,7 +70,9 @@ public:
                   Ks_brdf.G + (1.f - Ks_brdf.G) * f_schlick,
                   Ks_brdf.B + (1.f - Ks_brdf.B) * f_schlick);
 
-            color += F * (norm * powTerm / denom);
+            // Cap para suprimir fireflies no terminador (igual ao base)
+            float spec_val = std::min(norm * powTerm / denom, 50.f);
+            color += F * spec_val;
         }
 
         // difuso: zero — intencionalmente omitido

@@ -60,3 +60,20 @@ Tempo CPU em segundos reportado pelo `main.cpp` no final de cada `make run`
 
 ---
 
+## Ashikhmin-Shirley
+
+> Nota: renders com SPP=218 (valor actual de `main.cpp`), não 128.
+
+| Estudo | Tempo (s) |
+|---|---|
+| Standard (AshikhminShirleyTestStandart) | 9.757 secs |
+| FConst — Fresnel constante (AshikhminShirleyFConstTest) | 8.397 secs |
+| FInv — Fresnel invertido (AshikhminShirleyFInvTest) | 8.912 secs |
+| NoNorm — sem √((nu+1)(nv+1)) (AshikhminShirleyNoNormTest) | 8.605 secs |
+| LambDiff — difuso Lambert (AshikhminShirleyLambDiffTest) | 8.426 secs |
+| NoDiff — especular puro (AshikhminShirleyNoDiffTest) | 8.695 secs |
+| FExact — Fresnel dieléctrico exacto (AshikhminShirleyFExactTest) | 8.640 secs |
+| FSG — Fresnel spherical-gaussian (AshikhminShirleyFSGTest) | 8.279 secs |
+
+---
+
