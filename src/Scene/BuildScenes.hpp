@@ -42,6 +42,13 @@
 #include "OrenNayarFull.hpp"
 #include "OrenNayarFullInter.hpp"
 #include "Ward.hpp"
+#include "WardIsoForced.hpp"
+#include "WardNoNorm.hpp"
+#include "WardNoDiff.hpp"
+#include "WardNoGeom.hpp"
+#include "WardDur.hpp"
+#include "WardGMD.hpp"
+#include "WardFresnel.hpp"
 #include "AshikhminShirley.hpp"
 #include "AshikhminShirleyFConst.hpp"
 #include "AshikhminShirleyFInv.hpp"
@@ -73,9 +80,17 @@ void OrenNayarNoClampTest (Scene& scene);
 void OrenNayarFujiiTest (Scene& scene);
 void OrenNayarFullTest (Scene& scene);
 void OrenNayarFullInterTest (Scene& scene);
-void WardScene(Scene& scene);
-void WardJustOneThing(Scene& scene);
-void WardCubeScene(Scene& scene);
+// Ward — setup do estudo
+void WardTestStandart(Scene& scene);
+// Ward — variantes erradas
+void WardIsoForcedTest(Scene& scene);
+void WardNoNormTest(Scene& scene);
+void WardNoDiffTest(Scene& scene);
+void WardNoGeomTest(Scene& scene);
+// Ward — alternativas correctas
+void WardDurTest(Scene& scene);
+void WardGMDTest(Scene& scene);
+void WardFresnelTest(Scene& scene);
 void CookTorranceTestStandart(Scene& scene);
 void CookTorranceNoECTest2(Scene& scene);
 void CookTorranceFConstTest(Scene& scene);

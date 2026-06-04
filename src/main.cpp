@@ -96,10 +96,21 @@ int main(int argc, const char * argv[]) {
 
     // ----------------------------------------------- // -----------------------------------------------
 
-    //--WARD--
-    WardScene(scene);
-    //WardJustOneThing(scene);
-    //WardCubeScene(scene);
+    //--WARD -- setup do estudo --
+    //WardTestStandart(scene);           // standard (4 esferas: iso liso/rugoso + aniso/aniso forte)
+
+    //--WARD -- variantes "erradas" --
+    //WardIsoForcedTest(scene);          // força αx=αy (mata a anisotropia)
+    //WardNoNormTest(scene);             // sem normalização 1/(4π·αx·αy)
+    //WardNoDiffTest(scene);             // sem difuso Kd/π (especular puro)
+    //WardNoGeomTest(scene);             // sem atenuação geométrica √(NdotL·NdotV)
+
+    //--WARD -- alternativas correctas --
+    //WardDurTest(scene);                // Dür 2006: denom linear (NdotL·NdotV)
+    //WardGMDTest(scene);                // Geisler-Moroder & Dür 2010: denom (NdotH)^4
+    WardFresnelTest(scene);            // + Fresnel de Schlick no Ks
+
+    // ----------------------------------------------- // -----------------------------------------------
 
     //--ASHIKHMIN-SHIRLEY -- cenas base --
     //AshikhminShirleyScene(scene);

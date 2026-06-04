@@ -7,86 +7,109 @@
 #include "BuildScenes.hpp"
 #include "SceneHelpers.hpp"
 #include "Ward.hpp"
+#include "WardIsoForced.hpp"
+#include "WardNoNorm.hpp"
+#include "WardNoDiff.hpp"
+#include "WardNoGeom.hpp"
+#include "WardDur.hpp"
+#include "WardGMD.hpp"
+#include "WardFresnel.hpp"
 
-static void AddLights(Scene& scene) {
-    AmbientLight *ambient = new AmbientLight(RGB(0.06f, 0.05f, 0.04f));
-    scene.lights.push_back(ambient);
-    scene.numLights++;
-    PointLight *fill = new PointLight(RGB(300.f, 300.f, 300.f), Point(0.f, 1.f, -3.f));
-    scene.lights.push_back(fill);
-    scene.numLights++;
+// =========================================================================
+// ESTUDO Ward — setup de cena
+// Point light concentrada → highlight nítido (a forma esticada da anisotropia
+// lê-se melhor). Sem fill (diluiria o highlight). Ver docs/Ward_Study_Setup.md.
+// =========================================================================
+
+// Material/cor partilhado pelo estudo: metal escovado cinzento escuro
+#define WARD_STUDY_KA RGB(0.03f, 0.03f, 0.03f)
+#define WARD_STUDY_KD RGB(0.06f, 0.06f, 0.06f)
+#define WARD_STUDY_KS RGB(0.90f, 0.90f, 0.90f)
+
+static void addWardTestLighting (Scene& scene) {
+    // Key pontual frontal-superior → highlight nítido na face visível
+    PointLight *key = new PointLight(RGB(320.f, 320.f, 320.f), Point(0.f, 2.5f, -2.f));
+    scene.lights.push_back(key); scene.numLights++;
+
+    // Ambient mínimo
+    AmbientLight *ambient = new AmbientLight(RGB(0.03f, 0.03f, 0.03f));
+    scene.lights.push_back(ambient); scene.numLights++;
+
+    // Chão escuro (base das esferas em y=0.5−0.8=−0.3)
+    int floor_mat = AddDiffuseMat(scene, RGB(0.07f, 0.07f, 0.07f));
+    AddTriangle(scene, Point(-6.f,-0.3f,-2.f), Point(6.f,-0.3f,-2.f), Point(6.f,-0.3f,8.f), floor_mat);
+    AddTriangle(scene, Point(-6.f,-0.3f,-2.f), Point(6.f,-0.3f,8.f), Point(-6.f,-0.3f,8.f), floor_mat);
 }
 
-void WardScene(Scene& scene)
-{
-    RGB const Ka(0.05f, 0.04f, 0.03f);
-    RGB const Kd(0.20f, 0.16f, 0.10f);
-    RGB const Ks(0.90f, 0.75f, 0.50f);
+// Standard: 4 esferas cobrindo overall roughness (iso) e razão de anisotropia.
+void WardTestStandart (Scene& scene) {
+    RGB const Ka = WARD_STUDY_KA, Kd = WARD_STUDY_KD, Ks = WARD_STUDY_KS;
 
-    int const s1 = AddWardMat (scene, Ka, Kd, Ks, 0.30f, 0.30f);
-    int const s2 = AddWardMat (scene, Ka, Kd, Ks, 0.08f, 0.08f);
-    int const s3 = AddWardMatT(scene, Ka, Kd, Ks, 0.15f, 0.40f, Vector(1.f,0.f,0.f));
+    int m1 = AddWardMat (scene, Ka, Kd, Ks, 0.10f, 0.10f);                   // iso liso
+    int m2 = AddWardMat (scene, Ka, Kd, Ks, 0.40f, 0.40f);                   // iso rugoso
+    int m3 = AddWardMatT(scene, Ka, Kd, Ks, 0.10f, 0.40f, Vector(1.f,0.f,0.f)); // aniso
+    int m4 = AddWardMatT(scene, Ka, Kd, Ks, 0.05f, 0.50f, Vector(1.f,0.f,0.f)); // aniso forte
 
-    int const s4 = AddWardMatT(scene, Ka, Kd, Ks, 0.10f, 0.40f, Vector(1.f,0.f,0.f));
+    AddSphere(scene, Point(-3.f, 0.5f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.5f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.5f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.5f, 3.f), 0.8f, m4);
 
-    AddSphere(scene, Point( 3.f, 0.5f, 3.f), 0.8f, s1);
-    AddSphere(scene, Point( 1.f, 0.5f, 3.f), 0.8f, s2);
-    AddSphere(scene, Point(-1.f, 0.5f, 3.f), 0.8f, s3);
-    AddSphere(scene, Point(-3.f, 0.5f, 3.f), 0.8f, s4); 
-    
-    AddLights(scene);
+    addWardTestLighting(scene);
 }
 
-// ---------------------------------------------------------------------------
-// WardJustOneThing
-// ---------------------------------------------------------------------------
-void WardJustOneThing(Scene& scene)
-{
-    RGB const Ka(0.05f, 0.04f, 0.03f);
-    RGB const Kd(0.20f, 0.16f, 0.10f);
-    RGB const Ks(0.95f, 0.80f, 0.60f);
+// =========================================================================
+// ESTUDO Ward — variantes (erradas + alternativas correctas)
+// Cada cena replica EXACTAMENTE os 4 materiais do standard (mesmos αx/αy/
+// tangente, mesmo Kd/Ks, mesma iluminação), trocando apenas a classe BRDF.
+// Templates garantem que não há deriva de parâmetros face ao standard.
+// Comparar com WardTestStandart via RMSE/compare.sh. Ver docs/Ward_Study_Setup.md.
+// =========================================================================
 
-    /* METAL ESCOVADO DOURADO */
-    int const mat = AddWardMatT(scene, Ka, Kd, Ks, 0.15f, 0.40f,
-                                Vector(1.f, 0.f, 0.f));
-    /* METAL FORTE
-    int const mat = AddWardMatT(scene, Ka, Kd, Ks, 0.05f, 0.40f,
-                                Vector(1.f, 0.f, 0.f));
-    */
-    /* PRATA
-    int const mat = AddWardMatT(scene,
-        RGB(0.04f,0.04f,0.04f), RGB(0.15f,0.15f,0.15f), RGB(0.95f,0.95f,0.95f),
-        0.15f, 0.40f, Vector(1.f,0.f,0.f));
-    */
-    /* ISOTRÓPICO
-    int const mat = AddWardMat(scene, Ka,
-        RGB(0.50f,0.10f,0.10f), RGB(0.80f,0.80f,0.80f), 0.20f, 0.20f);
-    */
-
-    AddSphere(scene, Point(0.f, 0.5f, 3.f), 0.8f, mat);
-
-    AddLights(scene);
+// Helper genérico de material — instancia qualquer BRDF tipo-Ward (mesmos campos)
+template <typename T>
+static int AddWardVariantMat (Scene& scene, RGB const Ka, RGB const Kd, RGB const Ks,
+                              float const alphaX, float const alphaY,
+                              Vector const tangent, bool const hasTangent) {
+    T *brdf = new T;
+    brdf->Ka         = Ka;
+    brdf->Kd         = Kd;
+    brdf->Ks         = RGB(0.f, 0.f, 0.f);
+    brdf->Ks_brdf    = Ks;
+    brdf->Kt         = RGB(0.f, 0.f, 0.f);
+    brdf->alphaX     = std::max(0.01f, alphaX);
+    brdf->alphaY     = std::max(0.01f, alphaY);
+    brdf->tangent    = tangent;
+    brdf->hasTangent = hasTangent;
+    return scene.AddMaterial(brdf);
 }
 
-// ---------------------------------------------------------------------------
-// WardCubeScene
-// ---------------------------------------------------------------------------
-void WardCubeScene(Scene& scene)
-{
-    RGB const Ka(0.05f, 0.04f, 0.03f);
+// Builder genérico — os 4 materiais do standard com a BRDF T
+template <typename T>
+static void buildWardVariantScene (Scene& scene) {
+    RGB const Ka = WARD_STUDY_KA, Kd = WARD_STUDY_KD, Ks = WARD_STUDY_KS;
 
-    int const matFront = AddWardMat(scene, Ka,
-        RGB(0.35f, 0.05f, 0.05f),
-        RGB(0.70f, 0.70f, 0.70f),
-        0.25f, 0.25f);
+    int m1 = AddWardVariantMat<T>(scene, Ka, Kd, Ks, 0.10f, 0.10f, Vector(0.f,0.f,0.f), false); // iso liso
+    int m2 = AddWardVariantMat<T>(scene, Ka, Kd, Ks, 0.40f, 0.40f, Vector(0.f,0.f,0.f), false); // iso rugoso
+    int m3 = AddWardVariantMat<T>(scene, Ka, Kd, Ks, 0.10f, 0.40f, Vector(1.f,0.f,0.f), true);  // aniso
+    int m4 = AddWardVariantMat<T>(scene, Ka, Kd, Ks, 0.05f, 0.50f, Vector(1.f,0.f,0.f), true);  // aniso forte
 
-    int const matMetal = AddWardMatT(scene, Ka,
-        RGB(0.15f, 0.12f, 0.06f),
-        RGB(0.95f, 0.80f, 0.50f),
-        0.05f, 0.40f, Vector(1.f, 0.f, 0.f));
+    AddSphere(scene, Point(-3.f, 0.5f, 3.f), 0.8f, m1);
+    AddSphere(scene, Point(-1.f, 0.5f, 3.f), 0.8f, m2);
+    AddSphere(scene, Point( 1.f, 0.5f, 3.f), 0.8f, m3);
+    AddSphere(scene, Point( 3.f, 0.5f, 3.f), 0.8f, m4);
 
-    AddBoxMultiMat(scene, Point(0.f, -0.7f, 3.f), 0.8f,
-                   matFront, matMetal, matMetal, matMetal, matFront, matMetal);
-
-    AddLights(scene);
+    addWardTestLighting(scene);
 }
+
+// --- Variantes erradas ---
+void WardIsoForcedTest (Scene& scene) { buildWardVariantScene<WardIsoForced>(scene); }
+void WardNoNormTest    (Scene& scene) { buildWardVariantScene<WardNoNorm>(scene); }
+void WardNoDiffTest    (Scene& scene) { buildWardVariantScene<WardNoDiff>(scene); }
+void WardNoGeomTest    (Scene& scene) { buildWardVariantScene<WardNoGeom>(scene); }
+
+// --- Alternativas correctas ---
+void WardDurTest       (Scene& scene) { buildWardVariantScene<WardDur>(scene); }
+void WardGMDTest       (Scene& scene) { buildWardVariantScene<WardGMD>(scene); }
+void WardFresnelTest   (Scene& scene) { buildWardVariantScene<WardFresnel>(scene); }
+

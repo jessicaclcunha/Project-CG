@@ -43,3 +43,20 @@ Tempo CPU em segundos reportado pelo `main.cpp` no final de cada `make run`
 
 ---
 
+## Ward
+
+> Nota: estes renders foram feitos com SPP=218 (valor actual de `main.cpp`), não 128.
+
+| Estudo | Tempo (s) |
+|---|---|
+| Standard (WardTestStandart) | 7.965 secs |
+| IsoForced — força αx=αy (WardIsoForcedTest) | 8.011 secs |
+| NoNorm — sem 1/(4π·αx·αy) (WardNoNormTest) | 7.477 secs |
+| NoDiff — especular puro (WardNoDiffTest) | 7.920 secs |
+| NoGeom — sem √(NdotL·NdotV) (WardNoGeomTest) | 7.570 secs |
+| Dür 2006 — denom linear (WardDurTest) | 7.462 secs |
+| GMD 2010 — denom (NdotH)^4 (WardGMDTest) | 7.452 secs |
+| Fresnel — Schlick no Ks (WardFresnelTest) | 7.619 secs |
+
+---
+
