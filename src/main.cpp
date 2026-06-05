@@ -48,7 +48,7 @@ int main(int argc, const char * argv[]) {
     //CookTorranceShowcase(scene);
 
     //--COOK-TORRANCE-- SCENE DE CONTROLO --
-    CookTorranceTestStandart(scene); // Standart
+    //CookTorranceTestStandart(scene); // Standart
 
     //--COOK-TORRANCE-- EC --
     //CookTorranceNoECTest2(scene);   // sem EC
@@ -130,6 +130,19 @@ int main(int argc, const char * argv[]) {
     //--ASHIKHMIN-SHIRLEY -- alternativas correctas --
     //AshikhminShirleyFExactTest(scene);    // Fresnel dieléctrico exacto
     //AshikhminShirleyFSGTest(scene);       // Fresnel spherical-gaussian
+
+    // ----------------------------------------------- // -----------------------------------------------
+
+    //--DISNEY -- demo de presets --
+    //DisneyPresetsScene(scene);              // metal/plástico/tecido/verniz/cera
+
+    //--DISNEY -- sweeps de parâmetro --
+    //DisneyRoughnessSweep(scene);          // roughness 0→1 (metal)
+    //DisneyMetallicSweep(scene);           // metallic 0→1
+    //DisneyAnisoSweep(scene);              // anisotropic 0→1
+    //DisneySheenSweep(scene);              // sheen 0→1
+    //DisneySubsurfaceSweep(scene);         // subsurface 0→1
+    DisneyClearcoatSweep(scene);          // clearcoat 0→1
 
 
 

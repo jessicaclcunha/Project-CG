@@ -57,6 +57,7 @@
 #include "AshikhminShirleyNoDiff.hpp"
 #include "AshikhminShirleyFExact.hpp"
 #include "AshikhminShirleyFSG.hpp"
+#include "Disney.hpp"
 
 void SpheresScene (Scene& scene, int const N_spheres);
 void SpheresTriScene (Scene& scene);
@@ -124,5 +125,13 @@ void AshikhminShirleyNoDiffTest (Scene& scene);     // sem componente difusa
 // Ashikhmin-Shirley — alternativas correctas (Fresnel)
 void AshikhminShirleyFExactTest (Scene& scene);     // Fresnel dieléctrico exacto
 void AshikhminShirleyFSGTest (Scene& scene);        // Fresnel spherical-gaussian
+// Disney Principled BRDF — demo de presets + sweeps de parâmetro
+void DisneyPresetsScene (Scene& scene);
+void DisneyRoughnessSweep (Scene& scene);
+void DisneyMetallicSweep (Scene& scene);
+void DisneyAnisoSweep (Scene& scene);
+void DisneySheenSweep (Scene& scene);
+void DisneySubsurfaceSweep (Scene& scene);
+void DisneyClearcoatSweep (Scene& scene);
 
 #endif /* BuildScenes_hpp */
