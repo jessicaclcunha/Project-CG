@@ -38,52 +38,68 @@ int main(int argc, const char * argv[]) {
     /* Scenes*/
     //DLightChallenge(scene);
 
-    //--PHONG--
+    // -- PHONG --
     //PhongSphereScene(scene);
-    //PhongCubeScene (scene);
-    //PhongJustOneThing (scene);
-    //PhongTextureScene(scene);
+    //PhongCubeScene(scene);
+    //PhongJustOneThing(scene);
+    //PhongTextureScene(scene);      // <- textura original Phong (esfera + cubo)
 
-    //--COOK-TORRANCE--
+    // -- COOK-TORRANCE --
     //CookTorranceSphereScene(scene);
     //CookTorranceShowcase(scene);
-    //CookTorranceTestStandart(scene); // Standart: com EC
-    //CookTorranceNoECTest2(scene);   // Teste:    sem EC
-    //CookTorranceFConstTest(scene);  // Fresnel constante (F=F0)
-    //CookTorranceFExpTest(scene);    // Fresnel expoente 20
-    //CookTorranceFInvTest(scene);    // Fresnel invertido
-    //CookTorranceKDMetalTest(scene); // kD = metallic (papel invertido)
-    //CookTorranceKDLerpTest(scene);  // kD fixo 0.5/0.5
-    //CookTorranceGNoneTest(scene);   // G = 1 (sem shadowing-masking)
-    //CookTorranceGOneTest(scene);    // G = G1L apenas
-    //CookTorranceGKelemenTest(scene);// G Kelemen: F*D / (4*VdotH^2)
+    //CookTorranceTextureScene(scene); // <- textura original CT (esfera + cubo)
+    //CookTorranceTestStandart(scene);
+    //CookTorranceNoECTest2(scene);
+    //CookTorranceFConstTest(scene);
+    //CookTorranceFExpTest(scene);
+    //CookTorranceFInvTest(scene);
+    //CookTorranceKDMetalTest(scene);
+    //CookTorranceKDLerpTest(scene);
+    //CookTorranceGNoneTest(scene);
+    //CookTorranceGOneTest(scene);
+    //CookTorranceGKelemenTest(scene);
 
-    //--WARD--
+    // -- WARD --
     //WardScene(scene);
     //WardJustOneThing(scene);
     //WardCubeScene(scene);
 
-    //--ASHIKHMIN-SHIRLEY -- cenas base --
-    AshikhminShirleyScene(scene);
+    // -- OREN-NAYAR --
+    //OrenNayarScene(scene);
+    //OrenNayarJustOneThing(scene);
+
+    // -- ASHIKHMIN-SHIRLEY -- cenas base --
+    //AshikhminShirleyScene(scene);
     //AshikhminShirleyAnisotropicScene(scene);
     //AshikhminShirleyMaterialsScene(scene);
     //AshikhminShirleyJustOneThing(scene);
- 
-    //--ASHIKHMIN-SHIRLEY -- exploração de variantes --
-    //AshikhminShirleyTestStandart(scene);    // referência
-    //AshikhminShirleyFConstTest(scene);    // Fresnel constante
-    //AshikhminShirleyFInvTest(scene);      // Fresnel invertido
-    //AshikhminShirleyNoNormTest(scene);    // sem normalização do lóbulo
-    //AshikhminShirleyLambDiffTest(scene);  // difuso Lambertiano (sem CE)
-    //AshikhminShirleyNoDiffTest(scene);    // especular puro (sem difuso)
-    
-    
 
-    //  === Default View Point (frontal) ===
+    // -- ASHIKHMIN-SHIRLEY -- exploração de variantes --
+    //AshikhminShirleyTestStandart(scene);
+    //AshikhminShirleyFConstTest(scene);
+    //AshikhminShirleyFInvTest(scene);
+    //AshikhminShirleyNoNormTest(scene);
+    //AshikhminShirleyLambDiffTest(scene);
+    //AshikhminShirleyNoDiffTest(scene);
+
+    //TextureAllBRDFsSpheres(scene); //4 esferas: Phong / Cook-Torrance / Oren-Nayar / Ward todos com Dog.ppm
+    //TextureAllBRDFsBoxes(scene); //4 cubos com UV mapeamento per-face todos com UMinho.ppm para Phong, Cook-Torrance, Ward, Oren-Nayar
+    //                           NOTA: usar FOV=80° ou Eye=(0,0.5,-8) para ver tudo
+    TextureUVDebug(scene); // validação do UV mapping: esfera (UV esférico) + cubo (UV per-face) com Dog e UMinho
+
+    // =========================================================================
+    // Câmara
+    // =========================================================================
+
+    // === Default (frontal) — para a maioria das cenas ===
     const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};
     const Vector Up = {0, 1, 0};
 
-    // === Up View Point (topo) ===
+    // === Recuado — para TextureFullShowcase (7 colunas) ===
+    //const Point Eye = {0, 0.5, -8}, At = {0, 0, 3};
+    //const Vector Up = {0, 1, 0};
+
+    // === Up View Point ===
     //const Point Eye = {0, 10, 3}, At = {0, 0, 3};
     //const Vector Up = {0, 0, 1};
 
@@ -115,9 +131,7 @@ int main(int argc, const char * argv[]) {
     StandardRenderer myRender (cam, &scene, img, shd, spp, jitter);
     // render
     start = clock();
-    
     myRender.Render();
-    
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
@@ -130,5 +144,3 @@ int main(int argc, const char * argv[]) {
     std::cout << "That's all, folks!" << std::endl;
     return 0;
 }
-
-

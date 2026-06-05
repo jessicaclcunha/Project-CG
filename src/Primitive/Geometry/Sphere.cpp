@@ -10,34 +10,30 @@
 #include "Sphere.hpp"
 
 bool Sphere::intersect(Ray r, Intersection *isect) {
-    
+
     if (!bb.intersect(r)) {
         return false;
     }
-    
-    // from https://raytracing.github.io/books/RayTracingInOneWeekend.html#surfacenormalsandmultipleobjects/simplifyingtheray-sphereintersectioncode
+
     Vector oc = r.o.vec2point(C);
-    //float a = r.dir.normSQ();
-    //float a = 1.f;   // ray direction is normalized
     float h = r.dir.dot(oc);
     float c = oc.normSQ() - radiusSq;
     float discriminant = h*h - c;
     if (discriminant < EPSILON) {
         return (false);
     }
-    
-    // intersection distance along ray
+
     float t = h - std::sqrt(discriminant);
-    
-    if (t > EPSILON) // ray intersection
+
+    if (t > EPSILON)
     {
-        Point pHit = r.o + t* r.dir;
+        Point pHit = r.o + t * r.dir;
+
+        // Normal geométrica: sempre aponta para fora da esfera (não afectada pelo Faceforward)
         Vector normal = C.vec2point(pHit);
         normal.normalize();
-        
-        // Fill Intersection data from triangle hit : pag 165
+
         Vector wo = -1.f * r.dir;
-        // make sure the normal points to the same side of the surface as wo
         Vector const for_normal = normal.Faceforward(wo);
         isect->p = pHit;
         isect->gn = for_normal;
@@ -49,20 +45,16 @@ bool Sphere::intersect(Ray r, Intersection *isect) {
         isect->pix_y = r.pix_y;
         isect->incident_eta = r.propagating_eta;
 
-        // UV mapping esférico: normal local -> (u, v) em [0,1]
-        Vector nl = C.vec2point(pHit);
-        nl.normalize();
-        float u = 0.5f + atan2f(nl.Z, nl.X) / (2.0f * M_PI);
-        float v = 0.5f - asinf(nl.Y) / M_PI;
-        isect->TexCoord.u = u;
-        isect->TexCoord.v = v;
+        float u = 0.5f + atan2f(-normal.X, -normal.Z) / (2.f * float(M_PI));
+        float v = 0.5f + asinf(std::fmax(-1.f, std::fmin(1.f, normal.Y))) / float(M_PI);
+
+        // clamp para evitar out-of-bounds nas BRDFs texturizadas
+        isect->TexCoord.u = std::fmax(0.f, std::fmin(u, 0.9999f));
+        isect->TexCoord.v = std::fmax(0.f, std::fmin(v, 0.9999f));
 
         return true;
     }
-    else  {// This means that there is a line intersection but not a ray intersection.
+    else {
         return false;
     }
-    
-    return false;
 }
- 
