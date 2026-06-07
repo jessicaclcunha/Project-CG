@@ -142,9 +142,17 @@ int main(int argc, const char * argv[]) {
     //DisneyAnisoSweep(scene);              // anisotropic 0→1
     //DisneySheenSweep(scene);              // sheen 0→1
     //DisneySubsurfaceSweep(scene);         // subsurface 0→1
-    DisneyClearcoatSweep(scene);          // clearcoat 0→1
+    //DisneyClearcoatSweep(scene);          // clearcoat 0→1
 
+    // ----------------------------------------------- // -----------------------------------------------
 
+    //--Texture --
+    //TextureAllBRDFsSpheres(scene);    //4 esferas: Phong / Cook-Torrance / Oren-Nayar / Ward todos com Dog.ppm
+    //TextureAllBRDFsBoxes(scene);      //4 cubos com UV mapeamento per-face todos com UMinho.ppm para Phong, Cook-Torrance, Ward, Oren-Nayar
+    //                                    NOTA: usar FOV=80° ou Eye=(0,0.5,-8) para ver tudo
+    TextureUVDebug(scene);              // validação do UV mapping: esfera (UV esférico) + cubo (UV per-face) com Dog e UMinho
+
+    // ----------------------------------------------- // -----------------------------------------------
 
     //  === Default View Point (frontal) ===
     const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};

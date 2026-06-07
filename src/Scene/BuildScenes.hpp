@@ -16,9 +16,7 @@
 #include "triangle.hpp"
 #include "BRDF.hpp"
 #include "Phong.hpp"
-#include "PhongTexture.hpp"
 #include "CookTorrance.hpp"
-#include "CookTorranceTexture.hpp"
 #include "CookTorranceNoEC.hpp"
 #include "CookTorranceFConst.hpp"
 #include "CookTorranceFExp.hpp"
@@ -58,6 +56,11 @@
 #include "AshikhminShirleyFExact.hpp"
 #include "AshikhminShirleyFSG.hpp"
 #include "Disney.hpp"
+#include "PhongTexture.hpp"
+#include "CookTorranceTexture.hpp"
+#include "WardTexture.hpp"
+#include "OrenNayarTexture.hpp"
+#include "AshikhminShirleyTexture.hpp"
 
 void SpheresScene (Scene& scene, int const N_spheres);
 void SpheresTriScene (Scene& scene);
@@ -69,9 +72,7 @@ void DLightChallenge (Scene& scene);
 void PhongSphereScene (Scene& scene);
 void PhongCubeScene (Scene& scene);
 void PhongJustOneThing (Scene& scene);
-void PhongTextureScene (Scene& scene);
 void CookTorranceSphereScene (Scene& scene);
-void CookTorranceTextureScene (Scene& scene);
 void CookTorranceShowcase (Scene& scene);
 void OrenNayarLambertVsON (Scene& scene);
 // Oren-Nayar — estudo de variantes erradas + alternativas correctas
@@ -133,5 +134,12 @@ void DisneyAnisoSweep (Scene& scene);
 void DisneySheenSweep (Scene& scene);
 void DisneySubsurfaceSweep (Scene& scene);
 void DisneyClearcoatSweep (Scene& scene);
+// Texturas — cenas de demonstração de texturas
+void PhongTextureScene (Scene& scene);
+void CookTorranceTextureScene (Scene& scene);
+void TextureAllBRDFsSpheres(Scene& scene);
+void TextureAllBRDFsBoxes(Scene& scene);
+void TextureFullShowcase(Scene& scene);
+void TextureUVDebug(Scene& scene);
 
 #endif /* BuildScenes_hpp */

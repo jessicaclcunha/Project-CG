@@ -4,6 +4,7 @@
 #include "Phong.hpp"
 #include "ImagePPM.hpp"
 #include <cmath>
+#include <algorithm>
 
 class PhongTexture : public Phong {
 private:
@@ -17,13 +18,16 @@ public:
         tex_H = float(texture.H);
     }
 
-    // Kd vem da imagem; especular igual ao Phong normal
     RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {
         RGB color(0.f, 0.f, 0.f);
 
         if (type & DIFFUSE_REF) {
-            int x = (int)floor(curTexCoord.u * tex_W);
-            int y = (int)floor(curTexCoord.v * tex_H);
+            float u = std::max(0.f, std::min(curTexCoord.u, 0.9999f));
+            float v = std::max(0.f, std::min(1.f - curTexCoord.v, 0.9999f));
+            int x = (int)std::floor(u * tex_W);
+            int y = (int)std::floor(v * tex_H);
+            x = std::max(0, std::min(x, (int)tex_W - 1));
+            y = std::max(0, std::min(y, (int)tex_H - 1));
             RGB Kd_tex = Kd * texture.get(x, y);
             color += Kd_tex * (1.f / M_PI);
         }

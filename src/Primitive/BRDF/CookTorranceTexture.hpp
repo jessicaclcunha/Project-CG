@@ -4,6 +4,7 @@
 #include "CookTorrance.hpp"
 #include "ImagePPM.hpp"
 #include <cmath>
+#include <algorithm>
 
 class CookTorranceTexture : public CookTorrance {
 private:
@@ -17,15 +18,17 @@ public:
         tex_H = float(texture.H);
     }
 
-    // Kd vem da imagem; especular igual ao CookTorrance normal
     RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {
         RGB color(0.f, 0.f, 0.f);
 
-        int tx = (int)floor(curTexCoord.u * tex_W);
-        int ty = (int)floor(curTexCoord.v * tex_H);
+        float u = std::max(0.f, std::min(curTexCoord.u, 0.9999f));
+        float v = std::max(0.f, std::min(1.f - curTexCoord.v, 0.9999f));
+        int tx = (int)std::floor(u * tex_W);
+        int ty = (int)std::floor(v * tex_H);
+        tx = std::max(0, std::min(tx, (int)tex_W - 1));
+        ty = std::max(0, std::min(ty, (int)tex_H - 1));
         RGB Kd_tex = Kd * texture.get(tx, ty);
 
-        // F0 derivado de metallic + albedo textured
         RGB F0(0.04f * (1.f - metallic) + Kd_tex.R * metallic,
                0.04f * (1.f - metallic) + Kd_tex.G * metallic,
                0.04f * (1.f - metallic) + Kd_tex.B * metallic);
@@ -33,7 +36,6 @@ public:
         float NdotL = std::max(0.f, N.dot(wi));
         float NdotV = std::max(0.f, N.dot(wo));
 
-        // Fresnel a VdotH — partilhado entre difuso e especular
         RGB F = F0;
         float NdotH = 0.f, VdotH = 0.f, alpha = roughness * roughness;
         bool valid_H = false;
@@ -53,7 +55,6 @@ public:
             }
         }
 
-        // --- Difuso: kD = (1-F) * (1-metallic) / pi ---
         if (type & DIFFUSE_REF) {
             RGB kD((1.f - F.R) * (1.f - metallic),
                    (1.f - F.G) * (1.f - metallic),
@@ -61,17 +62,14 @@ public:
             color += Kd_tex * kD * (1.f / float(M_PI));
         }
 
-        // --- Especular: Cook-Torrance GGX/Smith/Schlick ---
         if (valid_H && (type & GLOSSY_REF)) {
             float alpha2 = alpha * alpha;
             float denom  = NdotH * NdotH * (alpha2 - 1.f) + 1.f;
             float D = alpha2 / (float(M_PI) * denom * denom);
-
             float k   = (roughness + 1.f) * (roughness + 1.f) / 8.f;
             float G1L = NdotL / (NdotL * (1.f - k) + k);
             float G1V = NdotV / (NdotV * (1.f - k) + k);
             float G   = G1L * G1V;
-
             color += F * (D * G / (4.f * NdotL * NdotV));
         }
 
