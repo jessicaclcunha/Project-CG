@@ -2,32 +2,23 @@
 #define CookTorranceTexture_hpp
 
 #include "CookTorrance.hpp"
-#include "ImagePPM.hpp"
+#include "Texture.hpp"
 #include <cmath>
 #include <algorithm>
 
 class CookTorranceTexture : public CookTorrance {
 private:
-    ImagePPM texture;
-    float tex_W, tex_H;
+    Texture* tex;
 public:
     CookTorranceTexture(std::string filename) {
-        texture.Load(filename);
+        tex = Texture::get(filename);
         textured = true;
-        tex_W = float(texture.W);
-        tex_H = float(texture.H);
     }
 
     RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {
         RGB color(0.f, 0.f, 0.f);
 
-        float u = std::max(0.f, std::min(curTexCoord.u, 0.9999f));
-        float v = std::max(0.f, std::min(1.f - curTexCoord.v, 0.9999f));
-        int tx = (int)std::floor(u * tex_W);
-        int ty = (int)std::floor(v * tex_H);
-        tx = std::max(0, std::min(tx, (int)tex_W - 1));
-        ty = std::max(0, std::min(ty, (int)tex_H - 1));
-        RGB Kd_tex = Kd * texture.get(tx, ty);
+        RGB Kd_tex = Kd * tex->sampleUV(curTexCoord.u, curTexCoord.v);
 
         RGB F0(0.04f * (1.f - metallic) + Kd_tex.R * metallic,
                0.04f * (1.f - metallic) + Kd_tex.G * metallic,

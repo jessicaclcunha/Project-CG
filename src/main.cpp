@@ -150,7 +150,8 @@ int main(int argc, const char * argv[]) {
     //TextureAllBRDFsSpheres(scene);    //4 esferas: Phong / Cook-Torrance / Oren-Nayar / Ward todos com Dog.ppm
     //TextureAllBRDFsBoxes(scene);      //4 cubos com UV mapeamento per-face todos com UMinho.ppm para Phong, Cook-Torrance, Ward, Oren-Nayar
     //                                    NOTA: usar FOV=80° ou Eye=(0,0.5,-8) para ver tudo
-    TextureUVDebug(scene);              // validação do UV mapping: esfera (UV esférico) + cubo (UV per-face) com Dog e UMinho
+    //TextureUVDebug(scene);              // validação do UV mapping: esfera (UV esférico) + cubo (UV per-face) com Dog e UMinho
+    CookTorranceTextureScene (scene);
 
     // ----------------------------------------------- // -----------------------------------------------
 

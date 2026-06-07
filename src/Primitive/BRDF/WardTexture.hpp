@@ -2,29 +2,22 @@
 #define WardTexture_hpp
 
 #include "Ward.hpp"
-#include "ImagePPM.hpp"
+#include "Texture.hpp"
 #include <cmath>
 #include <algorithm>
 
 class WardTexture : public Ward {
 private:
-    ImagePPM texture;
-    float tex_W, tex_H;
+    Texture* tex;
 
 public:
     explicit WardTexture(const std::string& filename) {
-        texture.Load(filename);
+        tex = Texture::get(filename);
         textured = true;
-        tex_W = static_cast<float>(texture.W);
-        tex_H = static_cast<float>(texture.H);
     }
 
     RGB GetKd(const Vec2& uv) {
-        float u = std::max(0.f, std::min(uv.u, 0.9999f));
-        float v = std::max(0.f, std::min(1.f - uv.v, 0.9999f));
-        int x = std::max(0, std::min((int)std::floor(u * tex_W), (int)tex_W - 1));
-        int y = std::max(0, std::min((int)std::floor(v * tex_H), (int)tex_H - 1));
-        return Kd * texture.get(x, y);
+        return Kd * tex->sampleUV(uv.u, uv.v);
     }
 
     RGB f(Vector wi, Vector wo, Vector N, const BRDF_TYPES type = BRDF_ALL) override {

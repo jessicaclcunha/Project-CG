@@ -8,10 +8,28 @@
 #include "ImagePPM.hpp"
 #include <iostream>
 #include <fstream>
+#include <cctype>
+#include <string>
 
 #include "Reinhard.hpp"
 #include "Box.hpp"
 #include "Median.hpp"
+
+// Lê o próximo token do header PPM, saltando espaços E linhas de comentário (#).
+// Consome exactamente um whitespace a seguir ao token — por isso, depois de ler
+// o maxval, o stream fica posicionado no início dos dados binários.
+static std::string ppmToken(std::istream& is) {
+    std::string tok;
+    char c;
+    while (is.get(c)) {                       // saltar whitespace e comentários
+        if (std::isspace((unsigned char)c)) continue;
+        if (c == '#') { while (is.get(c) && c != '\n') {} continue; }
+        tok.push_back(c);
+        break;
+    }
+    while (is.get(c) && !std::isspace((unsigned char)c)) tok.push_back(c);
+    return tok;
+}
 
 void ImagePPM::ImgClamp (int const W, int const H, RGB *image, char_pixel *img2save) {
     
@@ -81,15 +99,14 @@ bool ImagePPM::Load (std::string filename) {
              throw("Can't open input file");
              return false;
          }
-         std::string header;
-         int w, h, b;
-         ifs >> header;
-         if (strcmp(header.c_str(), "P6") != 0) throw("Can't read input file");
-         ifs >> w >> h >> b;
+         std::string header = ppmToken(ifs);
+         if (header != "P6") throw("Can't read input file");
+         int w = std::stoi(ppmToken(ifs));
+         int h = std::stoi(ppmToken(ifs));
+         (void) std::stoi(ppmToken(ifs));   // maxval (assume-se 255; consome o whitespace → binário começa aqui)
          W = w;
          H = h;
          imagePlane =  new RGB[W*H];
-         ifs.ignore(256, '\n');  //skip empty lines in necessary until we get to the binary data
          unsigned char pix[3];  //read each pixel one by one and convert bytes to floats
          for (int i = 0; i < w * h; ++i) {
              ifs.read(reinterpret_cast<char *>(pix), 3);

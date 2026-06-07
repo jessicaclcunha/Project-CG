@@ -99,11 +99,13 @@ static void AddBoxUV(Scene& scene, Point const center, float const half, int con
     float y0=center.Y-half, y1=center.Y+half;
     float z0=center.Z-half, z1=center.Z+half;
 
-    // UVs pré-invertidos em V para compensar o 1-v do GetKd
-    Vec2 TL(0.f, 1.f);   // topo-esquerda  visual → v=1 → após 1-v → v_final=0 (topo PPM)
-    Vec2 TR(1.f, 1.f);   // topo-direita   visual → v=1 → após 1-v → v_final=0
-    Vec2 BL(0.f, 0.f);   // base-esquerda  visual → v=0 → após 1-v → v_final=1 (fundo PPM)
-    Vec2 BR(1.f, 0.f);   // base-direita   visual → v=0 → após 1-v → v_final=1
+    // UVs pré-invertidos em V para compensar o flip (1-v) único do Texture::sampleUV.
+    // Nota: o flip vive agora SÓ no Texture::sampleUV. Esta inversão existe porque
+    // o V natural do cubo é oposto ao das esferas — não é uma 2ª convenção de flip.
+    Vec2 TL(0.f, 1.f);   // topo-esquerda  visual → v=1 → após flip → v_final=0 (topo PPM)
+    Vec2 TR(1.f, 1.f);   // topo-direita   visual → v=1 → após flip → v_final=0
+    Vec2 BL(0.f, 0.f);   // base-esquerda  visual → v=0 → após flip → v_final=1 (fundo PPM)
+    Vec2 BR(1.f, 0.f);   // base-direita   visual → v=0 → após flip → v_final=1
 
     // FRENTE (z=z0, normal -Z)
     // Vista de -Z: X cresce para a direita, Y para cima
