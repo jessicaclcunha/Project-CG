@@ -113,3 +113,49 @@ void WardDurTest       (Scene& scene) { buildWardVariantScene<WardDur>(scene); }
 void WardGMDTest       (Scene& scene) { buildWardVariantScene<WardGMD>(scene); }
 void WardFresnelTest   (Scene& scene) { buildWardVariantScene<WardFresnel>(scene); }
 
+void WardTextureStandart (Scene& scene) {
+    RGB const Ka = WARD_STUDY_KA;
+    RGB const Kd = WARD_STUDY_KD;
+    RGB const Ks = WARD_STUDY_KS;
+ 
+    // --- Linha de cima: materiais originais (cor plana) ---
+    int m1 = AddWardMat(scene, Ka, Kd, Ks, 0.10f, 0.10f);
+    int m2 = AddWardMat(scene, Ka, Kd, Ks, 0.40f, 0.40f);
+    int m3 = AddWardMatT(scene, Ka, Kd, Ks, 0.10f, 0.40f, Vector(1.f,0.f,0.f));
+    int m4 = AddWardMatT(scene, Ka, Kd, Ks, 0.05f, 0.50f, Vector(1.f,0.f,0.f));
+ 
+    // --- Linha de baixo: mesmos materiais com Dog.ppm ---
+    // Kd=1 para a textura não ser atenuada; alphaX/alphaY/tangente IDÊNTICOS
+    auto AddWardTex = [&](float ax, float ay, Vector t, bool hasT) -> int {
+        WardTexture *brdf = new WardTexture("Dog.ppm");
+        brdf->Ka = Ka;
+        brdf->Kd = RGB(1.f, 1.f, 1.f);
+        brdf->Ks = RGB(0.f, 0.f, 0.f);
+        brdf->Ks_brdf = Ks;
+        brdf->Kt = RGB(0.f, 0.f, 0.f);
+        brdf->alphaX = std::max(0.01f, ax);
+        brdf->alphaY = std::max(0.01f, ay);
+        brdf->tangent = t;
+        brdf->hasTangent = hasT;
+        return scene.AddMaterial(brdf);
+    };
+ 
+    int t1 = AddWardTex(0.10f, 0.10f, Vector(0.f,0.f,0.f), false);
+    int t2 = AddWardTex(0.40f, 0.40f, Vector(0.f,0.f,0.f), false);
+    int t3 = AddWardTex(0.10f, 0.40f, Vector(1.f,0.f,0.f), true);
+    int t4 = AddWardTex(0.05f, 0.50f, Vector(1.f,0.f,0.f), true);
+ 
+    float const xs[4] = { -3.f, -1.f, 1.f, 3.f };
+    float const z = 3.f;
+    float const radius = 0.8f;
+    int plain[4] = { m1, m2, m3, m4 };
+    int tex  [4] = { t1, t2, t3, t4 };
+ 
+    for (int i = 0; i < 4; i++) {
+        AddSphere(scene, Point(xs[i], 2.0f, z), radius, plain[i]);
+        AddSphere(scene, Point(xs[i], 0.2f, z), radius, tex  [i]);
+    }
+ 
+    // Iluminação igual à WardTestStandart
+    addWardTestLighting(scene);
+}

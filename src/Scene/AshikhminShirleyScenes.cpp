@@ -207,3 +207,54 @@ void AshikhminShirleyNoDiffTest  (Scene& scene) { buildASStudyScene<AshikhminShi
 // Alternativas correctas (formulações de Fresnel legítimas)
 void AshikhminShirleyFExactTest  (Scene& scene) { buildASStudyScene<AshikhminShirleyFExact>(scene); }   // Fresnel dieléctrico exacto
 void AshikhminShirleyFSGTest     (Scene& scene) { buildASStudyScene<AshikhminShirleyFSG>(scene); }      // Fresnel spherical-gaussian
+
+
+void AshikhminShirleyTextureStandart (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+    RGB const Ks_diel (0.50f, 0.50f, 0.50f);
+    RGB const Ks_metal(0.90f, 0.75f, 0.50f);
+    Vector const T(1.f, 0.f, 0.f);
+    Vector const T0(0.f, 0.f, 0.f);
+ 
+    // --- Linha de cima: materiais originais ---
+    int m1 = AddASMat(scene, Ka, Kd_diel,  Ks_diel,    10.f,   10.f, T0, false);
+    int m2 = AddASMat(scene, Ka, Kd_diel,  Ks_diel,    80.f,   80.f, T0, false);
+    int m3 = AddASMat(scene, Ka, Kd_metal, Ks_metal,  500.f,   10.f, T,  true);
+    int m4 = AddASMat(scene, Ka, Kd_metal, Ks_metal, 1000.f, 1000.f, T0, false);
+ 
+    // --- Linha de baixo: mesmos nu/nv/tangente com Dog.ppm ---
+    auto AddASTex = [&](RGB Ks, float nu, float nv, Vector t, bool hasT) -> int {
+        AshikhminShirleyTexture *brdf = new AshikhminShirleyTexture("Dog.ppm");
+        brdf->Ka = Ka;
+        brdf->Kd = RGB(1.f, 1.f, 1.f);
+        brdf->Ks = RGB(0.f, 0.f, 0.f);
+        brdf->Ks_brdf = Ks;
+        brdf->Kt = RGB(0.f, 0.f, 0.f);
+        brdf->nu = std::max(1.f, nu);
+        brdf->nv = std::max(1.f, nv);
+        brdf->tangent = t;
+        brdf->hasTangent = hasT;
+        return scene.AddMaterial(brdf);
+    };
+ 
+    int t1 = AddASTex(Ks_diel,     10.f,   10.f, T0, false);
+    int t2 = AddASTex(Ks_diel,     80.f,   80.f, T0, false);
+    int t3 = AddASTex(Ks_metal,   500.f,   10.f, T,  true);
+    int t4 = AddASTex(Ks_metal,  1000.f, 1000.f, T0, false);
+ 
+    float const xs[4] = { -3.f, -1.f, 1.f, 3.f };
+    float const z = 3.f;
+    float const radius = 0.8f;
+    int plain[4] = { m1, m2, m3, m4 };
+    int tex  [4] = { t1, t2, t3, t4 };
+ 
+    for (int i = 0; i < 4; i++) {
+        AddSphere(scene, Point(xs[i], 2.0f, z), radius, plain[i]);
+        AddSphere(scene, Point(xs[i], 0.2f, z), radius, tex  [i]);
+    }
+ 
+    // Iluminação igual à AshikhminShirleyTestStandart
+    addASTestLighting(scene);
+}

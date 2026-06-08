@@ -237,3 +237,45 @@ void OrenNayarFullInterTest (Scene& scene) {
     AddSphere(scene, Point( 3,0,3), 0.8f, m4);
     addONTestLighting(scene);
 }
+
+void OrenNayarTextureStandart (Scene& scene) {
+    RGB const Ka = ON_STUDY_KA;
+    RGB const Kd = ON_STUDY_KD;
+ 
+    // --- Linha de cima: materiais originais ---
+    int m1 = AddOrenNayarMat(scene, Ka, Kd, 0.3f);
+    int m2 = AddOrenNayarMat(scene, Ka, Kd, 0.5f);
+    int m3 = AddOrenNayarMat(scene, Ka, Kd, 0.7f);
+    int m4 = AddOrenNayarMat(scene, Ka, Kd, 0.9f);
+ 
+    // --- Linha de baixo: mesmos sigma com Dog.ppm ---
+    auto AddOrenTex = [&](float sigma) -> int {
+        OrenNayarTexture *brdf = new OrenNayarTexture("Dog.ppm");
+        brdf->Ka = Ka;
+        brdf->Kd = RGB(1.f, 1.f, 1.f);
+        brdf->Ks = RGB(0.f, 0.f, 0.f);
+        brdf->Ks_brdf = RGB(0.f, 0.f, 0.f);
+        brdf->Kt = RGB(0.f, 0.f, 0.f);
+        brdf->sigma = sigma;
+        return scene.AddMaterial(brdf);
+    };
+ 
+    int t1 = AddOrenTex(0.3f);
+    int t2 = AddOrenTex(0.5f);
+    int t3 = AddOrenTex(0.7f);
+    int t4 = AddOrenTex(0.9f);
+ 
+    float const xs[4] = { -3.f, -1.f, 1.f, 3.f };
+    float const z = 3.f;
+    float const radius = 0.8f;
+    int plain[4] = { m1, m2, m3, m4 };
+    int tex  [4] = { t1, t2, t3, t4 };
+ 
+    for (int i = 0; i < 4; i++) {
+        AddSphere(scene, Point(xs[i], 2.0f, z), radius, plain[i]);
+        AddSphere(scene, Point(xs[i], 0.2f, z), radius, tex  [i]);
+    }
+ 
+    // Iluminação igual à OrenNayarTestStandart
+    addONTestLighting(scene);
+}

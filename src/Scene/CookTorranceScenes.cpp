@@ -661,3 +661,40 @@ void CookTorranceGSmithIBLTest (Scene& scene) {
 
     addECTestLighting2(scene);
 }
+
+
+void CookTorranceTextureStandart (Scene& scene) {
+    RGB const Ka(0.02f, 0.02f, 0.02f);
+    RGB const Ks(1.0f,  1.0f,  1.0f);
+    RGB const Kd_diel (0.10f, 0.20f, 0.80f);
+    RGB const Kd_metal(1.00f, 0.71f, 0.29f);
+ 
+    // --- Linha de cima: materiais originais (cor plana) ---
+    int m1 = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, 0.1f, 0.0f);
+    int m2 = AddCookTorranceMat(scene, Ka, Kd_metal, Ks, 0.3f, 1.0f);
+    int m3 = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, 0.6f, 0.0f);
+    int m4 = AddCookTorranceMat(scene, Ka, Kd_diel,  Ks, 0.7f, 0.5f);
+ 
+    // --- Linha de baixo: mesmos materiais com Dog.ppm ---
+    // Kd=1 para a textura não ser atenuada
+    // roughness e metallic IDÊNTICOS aos originais, exceto t2 (metallic 1.0->0.5)
+    // para evitar esfera preta com point light única
+    int t1 = AddCookTorranceTexMat(scene, "Dog.ppm", Ka, RGB(1.f,1.f,1.f), Ks, 0.1f, 0.0f);
+    int t2 = AddCookTorranceTexMat(scene, "Dog.ppm", Ka, RGB(1.f,1.f,1.f), Ks, 0.3f, 0.5f);
+    int t3 = AddCookTorranceTexMat(scene, "Dog.ppm", Ka, RGB(1.f,1.f,1.f), Ks, 0.6f, 0.0f);
+    int t4 = AddCookTorranceTexMat(scene, "Dog.ppm", Ka, RGB(1.f,1.f,1.f), Ks, 0.7f, 0.5f);
+ 
+    float const xs[4] = { -3.f, -1.f, 1.f, 3.f };
+    float const radius = 0.8f;
+    float const z = 3.f;
+    int plain[4] = { m1, m2, m3, m4 };
+    int tex  [4] = { t1, t2, t3, t4 };
+ 
+    for (int i = 0; i < 4; i++) {
+        AddSphere(scene, Point(xs[i],  2.2f, z), radius, plain[i]); // linha de cima
+        AddSphere(scene, Point(xs[i],  0.2f, z), radius, tex  [i]); // linha de baixo
+    }
+ 
+    // Iluminação igual à CookTorranceTestStandart
+    addECTestLighting2(scene);
+}

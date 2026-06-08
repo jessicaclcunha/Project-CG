@@ -141,5 +141,9 @@ void TextureAllBRDFsSpheres(Scene& scene);
 void TextureAllBRDFsBoxes(Scene& scene);
 void TextureFullShowcase(Scene& scene);
 void TextureUVDebug(Scene& scene);
+void CookTorranceTextureStandart(Scene& scene);
+void WardTextureStandart(Scene& scene);
+void OrenNayarTextureStandart(Scene& scene);
+void AshikhminShirleyTextureStandart(Scene& scene);
 
 #endif /* BuildScenes_hpp */
