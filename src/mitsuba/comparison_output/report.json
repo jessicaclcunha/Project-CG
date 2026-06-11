@@ -1,0 +1,65 @@
+{
+  "title": "VI-RT vs Mitsuba 3 \u2014 Compara\u00e7\u00e3o de Renders",
+  "scenes": [
+    {
+      "scene": "ashikhmin",
+      "vi_rt_png": "../comparison_renders/ashikhmin_vi_rt.png",
+      "mitsuba_png": "../comparison_renders/ashikhmin_mitsuba.png",
+      "comparison": "ashikhmin_comparison.png",
+      "diff": "ashikhmin_diff.png",
+      "rmse": 0.13815513737021515,
+      "psnr": 17.19265921964682,
+      "ssim": 0.595785915851593
+    },
+    {
+      "scene": "cook_torrance",
+      "vi_rt_png": "../comparison_renders/cook_torrance_vi_rt.png",
+      "mitsuba_png": "../comparison_renders/cook_torrance_mitsuba.png",
+      "comparison": "cook_torrance_comparison.png",
+      "diff": "cook_torrance_diff.png",
+      "rmse": 0.14155442770914167,
+      "psnr": 16.981530834056187,
+      "ssim": 0.5972165465354919
+    },
+    {
+      "scene": "disney",
+      "vi_rt_png": "../comparison_renders/disney_vi_rt.png",
+      "mitsuba_png": "../comparison_renders/disney_mitsuba.png",
+      "comparison": "disney_comparison.png",
+      "diff": "disney_diff.png",
+      "rmse": 0.1439334042498161,
+      "psnr": 16.83676805486029,
+      "ssim": 0.6597747802734375
+    },
+    {
+      "scene": "oren_nayar",
+      "vi_rt_png": "../comparison_renders/oren_nayar_vi_rt.png",
+      "mitsuba_png": "../comparison_renders/oren_nayar_mitsuba.png",
+      "comparison": "oren_nayar_comparison.png",
+      "diff": "oren_nayar_diff.png",
+      "rmse": 0.09130164537814935,
+      "psnr": 20.790427916518397,
+      "ssim": 0.9385628700256348
+    },
+    {
+      "scene": "phong_spheres",
+      "vi_rt_png": "../comparison_renders/phong_spheres_vi_rt.png",
+      "mitsuba_png": "../comparison_renders/phong_spheres_mitsuba.png",
+      "comparison": "phong_spheres_comparison.png",
+      "diff": "phong_spheres_diff.png",
+      "rmse": 0.06165835082097241,
+      "psnr": 24.200161911012717,
+      "ssim": 0.9682361483573914
+    },
+    {
+      "scene": "ward",
+      "vi_rt_png": "../comparison_renders/ward_vi_rt.png",
+      "mitsuba_png": "../comparison_renders/ward_mitsuba.png",
+      "comparison": "ward_comparison.png",
+      "diff": "ward_diff.png",
+      "rmse": 0.12912754916906638,
+      "psnr": 17.779621835428088,
+      "ssim": 0.7327132225036621
+    }
+  ]
+}

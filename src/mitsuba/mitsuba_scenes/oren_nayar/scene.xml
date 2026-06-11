@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene version="3.0.0">
+
+    <!-- Integrador: path tracing directo (equivalente ao DistributedShader) -->
+    <integrator type="direct">
+        <integer name="emitter_samples" value="1"/>
+        <integer name="bsdf_samples" value="1"/>
+    </integrator>
+
+    <!-- Câmara -->
+    <sensor type="perspective">
+        <float name="fov" value="60.0"/>
+        <string name="fov_axis" value="y"/>
+        <transform name="to_world">
+            <lookat origin="0,0.5,-5"
+                    target="0,0,3"
+                    up="0,1,0"/>
+        </transform>
+        <sampler type="independent">
+            <integer name="sample_count" value="218"/>
+        </sampler>
+        <film type="hdrfilm">
+            <integer name="width"  value="640"/>
+            <integer name="height" value="640"/>
+            <rfilter type="gaussian"/>
+        </film>
+    </sensor>
+
+    <bsdf type="diffuse" id="mat_lamb">
+        <!-- Mitsuba 3 não tem Oren-Nayar nativo; usar diffuse como aproximação -->
+        <!-- sigma=0 rad -->
+        <rgb name="reflectance" value="0.7, 0.5, 0.3"/>
+    </bsdf>
+    <bsdf type="diffuse" id="mat_on_mid">
+        <!-- Mitsuba 3 não tem Oren-Nayar nativo; usar diffuse como aproximação -->
+        <!-- sigma=0.5 rad -->
+        <rgb name="reflectance" value="0.7, 0.5, 0.3"/>
+    </bsdf>
+    <bsdf type="diffuse" id="mat_on_rug">
+        <!-- Mitsuba 3 não tem Oren-Nayar nativo; usar diffuse como aproximação -->
+        <!-- sigma=0.9 rad -->
+        <rgb name="reflectance" value="0.7, 0.5, 0.3"/>
+    </bsdf>
+    <shape type="sphere">
+        <point name="center" x="-2.5" y="0" z="3"/>
+        <float name="radius" value="1"/>
+        <ref id="mat_lamb"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="0" y="0" z="3"/>
+        <float name="radius" value="1"/>
+        <ref id="mat_on_mid"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="2.5" y="0" z="3"/>
+        <float name="radius" value="1"/>
+        <ref id="mat_on_rug"/>
+    </shape>
+    <emitter type="point">
+        <rgb name="intensity" value="260, 260, 260"/>
+        <point name="position" x="0" y="0.5" z="-4.5"/>
+    </emitter>
+    <emitter type="constant">
+        <rgb name="radiance" value="0.04, 0.04, 0.04"/>
+    </emitter>
+
+</scene>

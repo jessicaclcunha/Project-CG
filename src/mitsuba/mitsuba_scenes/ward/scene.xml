@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene version="3.0.0">
+
+    <!-- Integrador: path tracing directo (equivalente ao DistributedShader) -->
+    <integrator type="direct">
+        <integer name="emitter_samples" value="1"/>
+        <integer name="bsdf_samples" value="1"/>
+    </integrator>
+
+    <!-- Câmara -->
+    <sensor type="perspective">
+        <float name="fov" value="60.0"/>
+        <string name="fov_axis" value="y"/>
+        <transform name="to_world">
+            <lookat origin="0,0.5,-5"
+                    target="0,0,3"
+                    up="0,1,0"/>
+        </transform>
+        <sampler type="independent">
+            <integer name="sample_count" value="218"/>
+        </sampler>
+        <film type="hdrfilm">
+            <integer name="width"  value="640"/>
+            <integer name="height" value="640"/>
+            <rfilter type="gaussian"/>
+        </film>
+    </sensor>
+
+    <bsdf type="roughconductor" id="mat_iso_liso">
+        <!-- Ward anisotrópico aproximado via GGX anisotrópico -->
+        <rgb name="specular_reflectance" value="0.9, 0.9, 0.9"/>
+        <float name="alpha_u" value="0.1"/>
+        <float name="alpha_v" value="0.1"/>
+        <string name="distribution" value="ggx"/>
+    </bsdf>
+    <bsdf type="roughconductor" id="mat_iso_rug">
+        <!-- Ward anisotrópico aproximado via GGX anisotrópico -->
+        <rgb name="specular_reflectance" value="0.9, 0.9, 0.9"/>
+        <float name="alpha_u" value="0.4"/>
+        <float name="alpha_v" value="0.4"/>
+        <string name="distribution" value="ggx"/>
+    </bsdf>
+    <bsdf type="roughconductor" id="mat_aniso">
+        <!-- Ward anisotrópico aproximado via GGX anisotrópico -->
+        <rgb name="specular_reflectance" value="0.9, 0.9, 0.9"/>
+        <float name="alpha_u" value="0.1"/>
+        <float name="alpha_v" value="0.4"/>
+        <string name="distribution" value="ggx"/>
+    </bsdf>
+    <bsdf type="roughconductor" id="mat_aniso_f">
+        <!-- Ward anisotrópico aproximado via GGX anisotrópico -->
+        <rgb name="specular_reflectance" value="0.9, 0.9, 0.9"/>
+        <float name="alpha_u" value="0.05"/>
+        <float name="alpha_v" value="0.5"/>
+        <string name="distribution" value="ggx"/>
+    </bsdf>
+    <shape type="sphere">
+        <point name="center" x="-3" y="0.5" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_iso_liso"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="-1" y="0.5" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_iso_rug"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="1" y="0.5" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_aniso"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="3" y="0.5" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_aniso_f"/>
+    </shape>
+    <emitter type="point">
+        <rgb name="intensity" value="320, 320, 320"/>
+        <point name="position" x="0" y="2.5" z="-2"/>
+    </emitter>
+    <emitter type="constant">
+        <rgb name="radiance" value="0.03, 0.03, 0.03"/>
+    </emitter>
+    <bsdf type="diffuse" id="mat_floor">
+        <rgb name="reflectance" value="0.07, 0.07, 0.07"/>
+    </bsdf>
+    <shape type="obj">
+        <string name="filename" value="floor.obj"/>
+        <ref id="mat_floor"/>
+    </shape>
+
+</scene>

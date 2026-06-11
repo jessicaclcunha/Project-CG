@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene version="3.0.0">
+
+    <!-- Integrador: path tracing directo (equivalente ao DistributedShader) -->
+    <integrator type="direct">
+        <integer name="emitter_samples" value="1"/>
+        <integer name="bsdf_samples" value="1"/>
+    </integrator>
+
+    <!-- Câmara -->
+    <sensor type="perspective">
+        <float name="fov" value="60.0"/>
+        <string name="fov_axis" value="y"/>
+        <transform name="to_world">
+            <lookat origin="0,0.5,-5"
+                    target="0,0,3"
+                    up="0,1,0"/>
+        </transform>
+        <sampler type="independent">
+            <integer name="sample_count" value="218"/>
+        </sampler>
+        <film type="hdrfilm">
+            <integer name="width"  value="640"/>
+            <integer name="height" value="640"/>
+            <rfilter type="gaussian"/>
+        </film>
+    </sensor>
+
+    <bsdf type="principled" id="mat_gold">
+        <rgb name="base_color" value="1.00, 0.78, 0.34"/>
+        <float name="metallic"   value="1"/>
+        <float name="roughness"  value="0.4"/>
+        <float name="specular"   value="0.5"/>
+    </bsdf>
+    <bsdf type="principled" id="mat_plastic">
+        <rgb name="base_color" value="0.10, 0.20, 0.80"/>
+        <float name="metallic"   value="0"/>
+        <float name="roughness"  value="0.35"/>
+        <float name="specular"   value="0.5"/>
+    </bsdf>
+    <bsdf type="principled" id="mat_fabric">
+        <rgb name="base_color" value="0.60, 0.10, 0.20"/>
+        <float name="metallic"   value="0"/>
+        <float name="roughness"  value="0.85"/>
+        <float name="specular"   value="0.5"/>
+    </bsdf>
+    <bsdf type="principled" id="mat_carpaint">
+        <rgb name="base_color" value="0.70, 0.05, 0.05"/>
+        <float name="metallic"   value="0"/>
+        <float name="roughness"  value="0.4"/>
+        <float name="specular"   value="0.5"/>
+    </bsdf>
+    <bsdf type="principled" id="mat_wax">
+        <rgb name="base_color" value="0.90, 0.75, 0.65"/>
+        <float name="metallic"   value="0"/>
+        <float name="roughness"  value="0.6"/>
+        <float name="specular"   value="0.5"/>
+    </bsdf>
+    <shape type="sphere">
+        <point name="center" x="-3.4" y="0" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_gold"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="-1.7" y="0" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_plastic"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="0" y="0" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_fabric"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="1.7" y="0" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_carpaint"/>
+    </shape>
+    <shape type="sphere">
+        <point name="center" x="3.4" y="0" z="3"/>
+        <float name="radius" value="0.8"/>
+        <ref id="mat_wax"/>
+    </shape>
+    <emitter type="point">
+        <rgb name="intensity" value="500, 500, 500"/>
+        <point name="position" x="0" y="4" z="-1"/>
+    </emitter>
+    <emitter type="constant">
+        <rgb name="radiance" value="0.15, 0.15, 0.15"/>
+    </emitter>
+    <bsdf type="diffuse" id="mat_floor">
+        <rgb name="reflectance" value="0.07, 0.07, 0.07"/>
+    </bsdf>
+    <shape type="obj">
+        <string name="filename" value="floor.obj"/>
+        <ref id="mat_floor"/>
+    </shape>
+
+</scene>

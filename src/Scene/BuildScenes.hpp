@@ -117,15 +117,15 @@ void AshikhminShirleyScene (Scene& scene);
 void AshikhminShirleyAnisotropicScene (Scene& scene);
 void AshikhminShirleyMaterialsScene (Scene& scene);
 // Ashikhmin-Shirley — cenas de exploração de variantes
-void AshikhminShirleyTestStandart (Scene& scene);   // referência com os 4 materiais padrão
-void AshikhminShirleyFConstTest (Scene& scene);     // Fresnel constante (F = F0)
-void AshikhminShirleyFInvTest (Scene& scene);       // Fresnel invertido
-void AshikhminShirleyNoNormTest (Scene& scene);     // sem fator sqrt((nu+2)(nv+2))
-void AshikhminShirleyLambDiffTest (Scene& scene);   // difuso Lambertiano simples
-void AshikhminShirleyNoDiffTest (Scene& scene);     // sem componente difusa
+void AshikhminShirleyTestStandart (Scene& scene);
+void AshikhminShirleyFConstTest (Scene& scene);
+void AshikhminShirleyFInvTest (Scene& scene);
+void AshikhminShirleyNoNormTest (Scene& scene);
+void AshikhminShirleyLambDiffTest (Scene& scene);
+void AshikhminShirleyNoDiffTest (Scene& scene);
 // Ashikhmin-Shirley — alternativas correctas (Fresnel)
-void AshikhminShirleyFExactTest (Scene& scene);     // Fresnel dieléctrico exacto
-void AshikhminShirleyFSGTest (Scene& scene);        // Fresnel spherical-gaussian
+void AshikhminShirleyFExactTest (Scene& scene);
+void AshikhminShirleyFSGTest (Scene& scene);
 // Disney Principled BRDF — demo de presets + sweeps de parâmetro
 void DisneyPresetsScene (Scene& scene);
 void DisneyRoughnessSweep (Scene& scene);
@@ -145,5 +145,6 @@ void CookTorranceTextureStandart(Scene& scene);
 void WardTextureStandart(Scene& scene);
 void OrenNayarTextureStandart(Scene& scene);
 void AshikhminShirleyTextureStandart(Scene& scene);
+void BRDFShowcaseCornellBox(Scene& scene);
 
 #endif /* BuildScenes_hpp */
