@@ -1,0 +1,5 @@
+# Módulo Mitsuba — tudo o que é gerado vive em output/.
+# Versiona-se APENAS output/comparison/ (entregável); o resto regenera-se.
+output/scenes/
+output/vi_rt/
+output/mitsuba/

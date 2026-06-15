@@ -416,10 +416,10 @@ let currentTab = "slider";
 function renderScene(scene) {
   const mc = document.getElementById("main-content");
 
-  const viSrc  = scene.vi_rt_png  ? `comparison_output/${scene.vi_rt_png}` : null;
-  const miSrc  = scene.mitsuba_png ? `comparison_output/${scene.mitsuba_png}` : null;
-  const cmpSrc = scene.comparison  ? `comparison_output/${scene.comparison}` : null;
-  const dfSrc  = scene.diff        ? `comparison_output/${scene.diff}` : null;
+  const viSrc  = scene.vi_rt_png  ? `output/comparison/${scene.vi_rt_png}` : null;
+  const miSrc  = scene.mitsuba_png ? `output/comparison/${scene.mitsuba_png}` : null;
+  const cmpSrc = scene.comparison  ? `output/comparison/${scene.comparison}` : null;
+  const dfSrc  = scene.diff        ? `output/comparison/${scene.diff}` : null;
 
   const metrics = { rmse: scene.rmse, psnr: scene.psnr, ssim: scene.ssim };
 
@@ -508,7 +508,7 @@ async function init() {
   let report;
 
   try {
-    const res = await fetch("comparison_output/report.json");
+    const res = await fetch("output/comparison/report.json");
     if (!res.ok) throw new Error("HTTP " + res.status);
     report = await res.json();
   } catch(e) {

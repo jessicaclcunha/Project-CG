@@ -1,169 +1,98 @@
 #!/bin/bash
-# render_all.sh
-# Renderiza todas as cenas Mitsuba 3 e converte os .exr para .png
-# Uso: ./render_all.sh [--scenes-dir DIR] [--vi-rt-results DIR] [--output DIR]
+# render_all.sh — pipeline VI-RT <-> Mitsuba 3 (módulo auto-contido)
 #
-# Dependências: mitsuba, Python 3 com Pillow e numpy (pip install Pillow numpy)
+# TUDO o que é gerado vai para output/ (scenes/ vi_rt/ mitsuba/ comparison/).
+# Run limpo:  rm -rf output && ./render_all.sh
+#
+# Fluxo:
+#   1. make mitsuba + correr o binário → renders VI-RT (output/vi_rt) E os
+#      scene.xml do Mitsuba (output/scenes), ambos a partir da MESMA Scene C++.
+#   2. Mitsuba renderiza esses XML → output/mitsuba (.exr)
+#   3. converte .exr e .ppm → .png (mesmo tone map: Reinhard + gamma 2.2)
+#   4. compara → output/comparison (metrics.csv, report.json, imagens)
+#
+# Dependências: mitsuba (python), numpy, Pillow; scikit-image p/ SSIM.
 
 set -euo pipefail
 
-SCENES_DIR="mitsuba_scenes"
-VIRI_RESULTS="build/apps/src/result"   # onde o VI-RT guarda os PPMs
-OUTPUT_DIR="comparison_renders"
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SELF_DIR/../.." && pwd)"
 PYTHON="python3"
 
-export DRJIT_LIBLLVM_PATH="/opt/homebrew/opt/llvm/lib/libLLVM.dylib"
+OUT="$SELF_DIR/output"
+SCENES_DIR="$OUT/scenes"      # XML/OBJ — gerados pelo C++ (gitignored)
+VIRT_DIR="$OUT/vi_rt"         # renders VI-RT: .ppm + _vi_rt.png (gitignored)
+MITSUBA_DIR="$OUT/mitsuba"    # renders Mitsuba: .exr + _mitsuba.png (gitignored)
+COMP_DIR="$OUT/comparison"    # métricas + comparações (VERSIONADO)
 
-# Parse de argumentos simples
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --scenes-dir)   SCENES_DIR="$2";    shift 2 ;;
-        --vi-rt-results) VIRI_RESULTS="$2"; shift 2 ;;
-        --output)       OUTPUT_DIR="$2";    shift 2 ;;
-        *) echo "Argumento desconhecido: $1"; exit 1 ;;
-    esac
-done
+mkdir -p "$VIRT_DIR" "$SCENES_DIR" "$MITSUBA_DIR" "$COMP_DIR"
 
-mkdir -p "$OUTPUT_DIR"
-
-echo "============================================"
-echo " Pipeline VI-RT <-> Mitsuba 3"
-echo "============================================"
-echo " Cenas:      $SCENES_DIR"
-echo " VI-RT PPMs: $VIRI_RESULTS"
-echo " Saída:      $OUTPUT_DIR"
-echo ""
-
-# ---------------------------------------------------------------------------
-# 1. Gerar XMLs (se ainda não existirem)
-# ---------------------------------------------------------------------------
-if [ ! -d "$SCENES_DIR" ]; then
-    echo "[1/4] Gerando cenas Mitsuba..."
-    $PYTHON generate_mitsuba_scenes.py --output-dir "$SCENES_DIR"
-else
-    echo "[1/4] Cenas já existem em $SCENES_DIR (apaga a pasta para regenerar)"
-fi
-
-# ---------------------------------------------------------------------------
-# 2. Renderizar com Mitsuba 3 (Via Python para evitar erro do LLVM)
-# ---------------------------------------------------------------------------
-echo ""
-echo "[2/4] Renderizando com Mitsuba 3..."
+# Usamos a variante scalar_rgb (CPU, SEM LLVM). Garante que um DRJIT_LIBLLVM_PATH
+# herdado (ex.: caminho de macOS) não força o backend LLVM e rebenta.
+unset DRJIT_LIBLLVM_PATH
 
 SCENE_KEYS=("phong_spheres" "cook_torrance" "oren_nayar" "ward" "ashikhmin" "disney")
 
-for scene_key in "${SCENE_KEYS[@]}"; do
-    xml="$SCENES_DIR/$scene_key/scene.xml"
-    exr_out="$OUTPUT_DIR/${scene_key}_mitsuba.exr"
+echo "============================================"
+echo " Pipeline VI-RT <-> Mitsuba 3   (output/ = tudo o gerado)"
+echo "============================================"
 
-    if [ ! -f "$xml" ]; then
-        echo "  [SKIP] $xml não existe"
-        continue
-    fi
+# 1) VI-RT: render + export do XML (mesma Scene → sem drift)
+echo ""
+echo "[1/4] VI-RT: render + export XML (make mitsuba)..."
+( cd "$PROJECT_ROOT" && make mitsuba )
+"$PROJECT_ROOT/build/apps/mitsuba_render" "$VIRT_DIR" "$SCENES_DIR"
 
-    echo "  Renderizando $scene_key..."
-    # Usa o Python diretamente para forçar o uso de scalar_rgb (sem LLVM)
-    $PYTHON -c "import mitsuba as mi; mi.set_variant('scalar_rgb'); scene = mi.load_file('$xml'); img = mi.render(scene); mi.util.write_bitmap('$exr_out', img)"
+# 2) Mitsuba: renderiza os XML exportados
+echo ""
+echo "[2/4] Mitsuba: render dos XML..."
+for k in "${SCENE_KEYS[@]}"; do
+    xml="$SCENES_DIR/$k/scene.xml"
+    if [ ! -f "$xml" ]; then echo "  [SKIP] $xml"; continue; fi
+    echo "  $k..."
+    $PYTHON -c "import mitsuba as mi; mi.set_variant('scalar_rgb'); s=mi.load_file('$xml'); mi.util.write_bitmap('$MITSUBA_DIR/${k}_mitsuba.exr', mi.render(s))"
 done
 
-# ---------------------------------------------------------------------------
-# 3. Converter EXR -> PNG com tone mapping
-# ---------------------------------------------------------------------------
+# 3) Conversões → PNG com o MESMO tone map do VI-RT (Reinhard + gamma 2.2)
 echo ""
-echo "[3/4] Convertendo EXR -> PNG..."
+echo "[3/4] Converter EXR/PPM -> PNG..."
+$PYTHON - "$MITSUBA_DIR" "$VIRT_DIR" <<'EOF'
+import sys, os, glob
+import numpy as np
+from PIL import Image
+mitsuba_dir, virt_dir = sys.argv[1], sys.argv[2]
 
-$PYTHON - <<'EOF'
-import os, sys, glob
+def reinhard_png(arr, png):
+    arr = arr / (1.0 + arr)                 # Reinhard (igual ao ImagePPM)
+    arr = np.clip(arr, 0, 1) ** (1/2.2)     # gamma 2.2
+    Image.fromarray((arr*255).astype(np.uint8)).save(png)
 
+# EXR (Mitsuba, linear) -> PNG com Reinhard+gamma
 try:
-    import numpy as np
-    from PIL import Image
-    import OpenEXR, Imath
-except ImportError:
-    # Fallback: tentar com mitsuba Python API
-    try:
-        import mitsuba as mi
-        mi.set_variant("scalar_rgb")
-        USE_MI = True
-    except ImportError:
-        print("  [AVISO] Nem OpenEXR nem mitsuba Python disponíveis.")
-        print("          Instala: pip install openexr mitsuba")
-        sys.exit(0)
-    USE_MI = False
-    USE_MI = True
-else:
-    USE_MI = False
+    import mitsuba as mi
+    mi.set_variant("scalar_rgb")
+    for exr in glob.glob(os.path.join(mitsuba_dir, "*.exr")):
+        arr = np.array(mi.Bitmap(exr), dtype=np.float32)[..., :3]
+        reinhard_png(arr, exr.replace(".exr", ".png"))
+        print("  ->", os.path.basename(exr).replace(".exr", ".png"))
+except Exception as e:
+    print("  [AVISO] conversao EXR falhou:", e)
 
-output_dir = "comparison_renders"
-
-for exr_path in glob.glob(os.path.join(output_dir, "*.exr")):
-    png_path = exr_path.replace(".exr", ".png")
-    scene_name = os.path.basename(exr_path).replace("_mitsuba.exr", "")
-
-    try:
-        if USE_MI:
-            import mitsuba as mi
-            mi.set_variant("scalar_rgb")
-            bmp = mi.Bitmap(exr_path)
-            bmp = bmp.convert(mi.Bitmap.PixelFormat.RGB, mi.Struct.Type.UInt8, True)
-            bmp.write(png_path)
-        else:
-            # OpenEXR + Pillow
-            exr = OpenEXR.InputFile(exr_path)
-            dw  = exr.header()["dataWindow"]
-            w   = dw.max.x - dw.min.x + 1
-            h   = dw.max.y - dw.min.y + 1
-            pt  = Imath.PixelType(Imath.PixelType.FLOAT)
-            r = np.frombuffer(exr.channel("R", pt), dtype=np.float32).reshape(h, w)
-            g = np.frombuffer(exr.channel("G", pt), dtype=np.float32).reshape(h, w)
-            b = np.frombuffer(exr.channel("B", pt), dtype=np.float32).reshape(h, w)
-            # Reinhard tone mapping + gamma 2.2
-            img = np.stack([r, g, b], axis=-1)
-            img = img / (1.0 + img)
-            img = np.clip(img, 0, 1) ** (1/2.2)
-            img = (img * 255).astype(np.uint8)
-            Image.fromarray(img).save(png_path)
-
-        print(f"  -> {png_path}")
-    except Exception as e:
-        print(f"  [ERRO] {exr_path}: {e}")
+# PPM (VI-RT, já com tone map) -> _vi_rt.png
+for ppm in glob.glob(os.path.join(virt_dir, "*.ppm")):
+    name = os.path.splitext(os.path.basename(ppm))[0]
+    Image.open(ppm).save(os.path.join(virt_dir, name + "_vi_rt.png"))
+    print("  ->", name + "_vi_rt.png")
 EOF
 
-# ---------------------------------------------------------------------------
-# 4. Converter PPMs do VI-RT -> PNG
-# ---------------------------------------------------------------------------
+# 4) Comparação → output/comparison
 echo ""
-echo "[4/4] Convertendo PPMs do VI-RT -> PNG..."
-
-$PYTHON - <<EOF
-import os, glob
-
-try:
-    from PIL import Image
-except ImportError:
-    print("  [AVISO] Pillow não instalado: pip install Pillow")
-    exit()
-
-vi_rt_results = "$VIRI_RESULTS"
-output_dir    = "$OUTPUT_DIR"
-
-ppms = glob.glob(os.path.join(vi_rt_results, "*.ppm"))
-if not ppms:
-    print(f"  [AVISO] Nenhum PPM encontrado em {vi_rt_results}")
-    print("          Corre o VI-RT primeiro para gerar imagens de resultado.")
-else:
-    for ppm in ppms:
-        name = os.path.splitext(os.path.basename(ppm))[0]
-        out  = os.path.join(output_dir, f"{name}_vi_rt.png")
-        try:
-            Image.open(ppm).save(out)
-            print(f"  -> {out}")
-        except Exception as e:
-            print(f"  [ERRO] {ppm}: {e}")
-EOF
+echo "[4/4] Comparação VI-RT vs Mitsuba..."
+$PYTHON "$SELF_DIR/compare_renders.py" \
+    --vi-rt-dir "$VIRT_DIR" --mitsuba-dir "$MITSUBA_DIR" --out-dir "$COMP_DIR"
 
 echo ""
 echo "============================================"
-echo " Concluído! Ficheiros em: $OUTPUT_DIR"
-echo " Próximo passo: python3 compare_renders.py"
+echo " Concluído. Resultados em: $COMP_DIR"
+echo " Viewer: comparison_viewer.html"
 echo "============================================"

@@ -38,6 +38,11 @@ public:
         prims.push_back(prim);
         numPrimitives++;
     }
+    // Accessors só-leitura (usados pelo exportador Mitsuba — percorre a MESMA
+    // Scene que o renderer, garantindo geometria/material idênticos).
+    const std::vector<Primitive *>& getPrimitives () const { return prims; }
+    BRDF* getBRDF (int i) const { return BRDFs[i]; }
+    int getNumBRDFs () const { return numBRDFs; }
     void printSummary(void) {
         std::cout << "#primitives = " << numPrimitives << " ; ";
         std::cout << "#lights = " << numLights << " ; ";

@@ -24,6 +24,12 @@ OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 DEPENDENCIES \
 		:= $(OBJECTS:.o=.d)
 
+# --- Módulo Mitsuba: 2º binário (driver de renderização separado da main) ---
+# Reutiliza todos os objetos do motor EXCETO o main.o, + o vi_rt_render.o próprio.
+MITSUBA_SRC     := $(TARGET)/mitsuba/vi_rt_render.cpp $(TARGET)/mitsuba/MitsubaExporter.cpp
+MITSUBA_OBJ     := $(MITSUBA_SRC:%.cpp=$(OBJ_DIR)/%.o)
+ENGINE_OBJECTS  := $(filter-out $(OBJ_DIR)/$(TARGET)/main.o,$(OBJECTS))
+
 all:	build $(APP_DIR)/$(TARGET)
 
 $(OBJ_DIR)/%.o: %.cpp
@@ -35,9 +41,16 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS)
 
+# Binário do módulo Mitsuba (driver de renderização das cenas de referência)
+mitsuba: build $(APP_DIR)/mitsuba_render
+
+$(APP_DIR)/mitsuba_render: $(ENGINE_OBJECTS) $(MITSUBA_OBJ)
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -o $(APP_DIR)/mitsuba_render $^ $(LDFLAGS)
+
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean 
+.PHONY: all build clean mitsuba
 
 build:
 	@mkdir -p $(APP_DIR)

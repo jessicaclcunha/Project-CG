@@ -137,19 +137,17 @@ def compose_comparison(vi_rt: np.ndarray, mitsuba: np.ndarray,
 # Descoberta de pares de imagens
 # ---------------------------------------------------------------------------
 
-def find_pairs(renders_dir: str):
+def find_pairs(vi_rt_dir: str, mitsuba_dir: str):
     """
-    Encontra pares (vi_rt_path, mitsuba_path) baseado em nomes de ficheiro.
-    Convenção:
-      VI-RT:   <cena>_vi_rt.png
-      Mitsuba: <cena>_mitsuba.png
-    Se não existir PNG do Mitsuba, tenta <cena>_mitsuba.exr convertido.
+    Encontra pares (cena, vi_rt_path, mitsuba_path) cruzando dois directórios:
+      VI-RT:   <vi_rt_dir>/<cena>_vi_rt.png
+      Mitsuba: <mitsuba_dir>/<cena>_mitsuba.png
     """
-    vi_rt_files = glob.glob(os.path.join(renders_dir, "*_vi_rt.png"))
+    vi_rt_files = glob.glob(os.path.join(vi_rt_dir, "*_vi_rt.png"))
     pairs = []
     for vi_path in sorted(vi_rt_files):
         base = os.path.basename(vi_path).replace("_vi_rt.png", "")
-        mi_path = os.path.join(renders_dir, f"{base}_mitsuba.png")
+        mi_path = os.path.join(mitsuba_dir, f"{base}_mitsuba.png")
         if os.path.exists(mi_path):
             pairs.append((base, vi_path, mi_path))
         else:
@@ -163,9 +161,11 @@ def find_pairs(renders_dir: str):
 
 def main():
     parser = argparse.ArgumentParser(description="Compara renders VI-RT vs Mitsuba 3")
-    parser.add_argument("--dir",     default="comparison_renders",
-                        help="Directório com os PNGs de ambos os renderers")
-    parser.add_argument("--out-dir", default="comparison_output",
+    parser.add_argument("--vi-rt-dir",   default="output/vi_rt",
+                        help="Directório com os PNGs do VI-RT (<cena>_vi_rt.png)")
+    parser.add_argument("--mitsuba-dir", default="output/mitsuba",
+                        help="Directório com os PNGs do Mitsuba (<cena>_mitsuba.png)")
+    parser.add_argument("--out-dir",     default="output/comparison",
                         help="Directório de saída para comparações e métricas")
     parser.add_argument("--amplify", type=float, default=5.0,
                         help="Factor de amplificação do mapa de diferença (default: 5)")
@@ -173,9 +173,9 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
 
-    pairs = find_pairs(args.dir)
+    pairs = find_pairs(args.vi_rt_dir, args.mitsuba_dir)
     if not pairs:
-        print(f"[ERRO] Nenhum par encontrado em '{args.dir}'")
+        print(f"[ERRO] Nenhum par encontrado ('{args.vi_rt_dir}' x '{args.mitsuba_dir}')")
         print("       Corre primeiro: ./render_all.sh")
         return
 

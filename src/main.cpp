@@ -7,8 +7,6 @@
 
 #include <sys/stat.h>
 #include <iostream>
-#include <string>
-#include <time.h>
 #include "scene.hpp"
 #include "Perspective.hpp"
 #include "DummyRenderer.hpp"
@@ -21,112 +19,32 @@
 #include "AmbientLight.hpp"
 #include "Sphere.hpp"
 #include "BuildScenes.hpp"
+#include <time.h>
+
 
 int main(int argc, const char * argv[]) {
+    Scene scene;
+    ImagePPM *img;    // Image
+    Shader *shd;      // Shader
+    clock_t start, end;
+    double cpu_time_used;
     
-    // Lista de todas as cenas principais a renderizar em lote
-    std::string scenes_to_render[] = {
-        "phong_spheres", 
-        "cook_torrance", 
-        "oren_nayar", 
-        "ward", 
-        "ashikhmin", 
-        "disney"
-    };
+    // Image resolution
+    const int W= 640;
+    const int H= 640;
 
-    // Cria a pasta de resultados caso não exista
-    mkdir("result", 0777);
+    img = new ImagePPM(W,H);
 
-    std::cout << " VI-RT: A iniciar renderizacao... " << std::endl;
-
-    // Ciclo que percorre e renderiza cada cena da lista
-    for (const std::string& scene_name : scenes_to_render) {
-        
-        Scene scene;          // Criada na stack para limpar a geometria a cada iteracao
-        ImagePPM *img;        // Image
-        Shader *shd;          // Shader
-        clock_t start, end;
-        double cpu_time_used;
-        
-        // Image resolution
-        const int W = 640;
-        const int H = 640;
-        img = new ImagePPM(W, H);
-
-        // Seleção da cena atual do ciclo
-        if (scene_name == "phong_spheres") {
-            PhongSphereScene(scene);
-        } 
-        else if (scene_name == "cook_torrance") {
-            CookTorranceSphereScene(scene);
-        } 
-        else if (scene_name == "oren_nayar") {
-            OrenNayarLambertVsON(scene);
-        } 
-        else if (scene_name == "ward") {
-            WardTestStandart(scene);
-        } 
-        else if (scene_name == "ashikhmin") {
-            AshikhminShirleyTestStandart(scene);
-        } 
-        else if (scene_name == "disney") {
-            DisneyPresetsScene(scene);
-        }
-
-        std::cout << "\n-> A renderizar: " << scene_name << "..." << std::endl;
-
-        // === Default View Point (frontal — para cenas de esferas) ===
-        const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};
-        const Vector Up = {0, 1, 0};
-        const float fovH = 60.f;
-
-        const float deFocusRad = 0 * 3.14f / 180.f;
-        const float FocusDist = 1.f;
-        const float fovHrad = fovH * 3.14f / 180.f;    // to radians
-        Perspective *cam = new Perspective(Eye, At, Up, W, H, fovHrad, deFocusRad, FocusDist);
-
-        /* Shader e SPP config */
-        shd = new DistributedShader(&scene, RGB(0.05, 0.05, 0.1));
-        int const spp = 64;
-        
-        bool const jitter = true;
-        StandardRenderer myRender(cam, &scene, img, shd, spp, jitter);
-        
-        // Renderização e contagem de tempo
-        start = clock();
-        myRender.Render();
-        end = clock();
-        
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-        // Guardar a imagem automaticamente com o respetivo nome
-        std::string filename = "result/" + scene_name + ".ppm";
-        img->Save(filename.c_str());
-        
-        fprintf(stdout, "   Tempo de execucao = %.3lf secs\n", cpu_time_used);
-        std::cout << "   Guardado em: " << filename << std::endl;
-        
-        // Limpeza de memória da iteração atual
-        delete cam;
-        delete shd;
-        delete img;
-    }
-
-    std::cout << "\n=========================================" << std::endl;
-    std::cout << " Todas as cenas foram renderizadas!" << std::endl;
-    std::cout << "=========================================" << std::endl;
-
-    /* ========================================================================================
-       Se quiseres incluir alguma destas variantes no ciclo automático, basta adicionares
-       o nome dela na lista 'scenes_to_render' lá em cima e criar o respetivo 'else if'.
-    ========================================================================================
-    
     //--PHONG--
+    //PhongSphereScene(scene);
     //PhongCubeScene (scene);
     //PhongJustOneThing (scene);
     //PhongTextureScene(scene);
 
+    // ----------------------------------------------- // -----------------------------------------------
+
     //--COOK-TORRANCE--
+    //CookTorranceSphereScene(scene);
     //CookTorranceShowcase(scene);
 
     //--COOK-TORRANCE-- SCENE DE CONTROLO --
@@ -157,6 +75,11 @@ int main(int argc, const char * argv[]) {
     //CookTorranceGCT1982Test(scene);     // G original paper 1982: min(1, 2NdotH*NdotV/VdotH, ...)
     //CookTorranceGSmithIBLTest(scene);   // G Smith-GGX IBL: k=roughness²/2 (mais shadow-masking)
 
+    // ----------------------------------------------- // -----------------------------------------------
+
+    //--OREN-NAYAR -- cena base (demo) --
+    //OrenNayarLambertVsON(scene);        // contraste Lambert vs ON — luz de farol
+
     //--OREN-NAYAR -- SCENE DE CONTROLO --
     //OrenNayarTestStandart(scene);       // Standart (ON simplificado)
 
@@ -171,6 +94,11 @@ int main(int argc, const char * argv[]) {
     //OrenNayarFullTest(scene);           // ON completo 1994 (C1/C2/C3)
     //OrenNayarFullInterTest(scene);      // Full + inter-reflexão L2 (Kd²)
 
+    // ----------------------------------------------- // -----------------------------------------------
+
+    //--WARD -- setup do estudo --
+    //WardTestStandart(scene);           // standard (4 esferas: iso liso/rugoso + aniso/aniso forte)
+
     //--WARD -- variantes "erradas" --
     //WardIsoForcedTest(scene);          // força αx=αy (mata a anisotropia)
     //WardNoNormTest(scene);             // sem normalização 1/(4π·αx·αy)
@@ -182,10 +110,15 @@ int main(int argc, const char * argv[]) {
     //WardGMDTest(scene);                // Geisler-Moroder & Dür 2010: denom (NdotH)^4
     //WardFresnelTest(scene);            // + Fresnel de Schlick no Ks
 
+    // ----------------------------------------------- // -----------------------------------------------
+
     //--ASHIKHMIN-SHIRLEY -- cenas base --
     //AshikhminShirleyScene(scene);
     //AshikhminShirleyAnisotropicScene(scene);
     //AshikhminShirleyMaterialsScene(scene);
+
+    //--WARD -- setup do estudo --
+    //AshikhminShirleyTestStandart(scene);    // referência
 
     //--ASHIKHMIN-SHIRLEY -- exploração de variantes --
     //AshikhminShirleyFConstTest(scene);    // Fresnel constante
@@ -198,6 +131,11 @@ int main(int argc, const char * argv[]) {
     //AshikhminShirleyFExactTest(scene);    // Fresnel dieléctrico exacto
     //AshikhminShirleyFSGTest(scene);       // Fresnel spherical-gaussian
 
+    // ----------------------------------------------- // -----------------------------------------------
+
+    //--DISNEY -- demo de presets --
+    //DisneyPresetsScene(scene);              // metal/plástico/tecido/verniz/cera
+
     //--DISNEY -- sweeps de parâmetro --
     //DisneyRoughnessSweep(scene);          // roughness 0→1 (metal)
     //DisneyMetallicSweep(scene);           // metallic 0→1
@@ -206,23 +144,69 @@ int main(int argc, const char * argv[]) {
     //DisneySubsurfaceSweep(scene);         // subsurface 0→1
     //DisneyClearcoatSweep(scene);          // clearcoat 0→1
 
+    // ----------------------------------------------- // -----------------------------------------------
+
     //--Texture --
-    //TextureAllBRDFsSpheres(scene);
-    //TextureAllBRDFsBoxes(scene);
-    //TextureUVDebug(scene);
+    //TextureAllBRDFsSpheres(scene);    //4 esferas: Phong / Cook-Torrance / Oren-Nayar / Ward todos com Dog.ppm
+    TextureAllBRDFsBoxes(scene);      //4 cubos com UV mapeamento per-face todos com UMinho.ppm para Phong, Cook-Torrance, Ward, Oren-Nayar
+    //                                    NOTA: usar FOV=80° ou Eye=(0,0.5,-8) para ver tudo
+    //TextureUVDebug(scene);              // validação do UV mapping: esfera (UV esférico) + cubo (UV per-face) com Dog e UMinho
     //CookTorranceTextureStandart(scene);
     //WardTextureStandart(scene);
     //OrenNayarTextureStandart(scene);
     //AshikhminShirleyTextureStandart(scene);
+    // ----------------------------------------------- // -----------------------------------------------
 
-    //BRDFShowcaseCornellBox(scene);
-    
-    // === Cornell Box View Point (Jensen et al.) ===
-    // const Point Eye = {278, 273, -800}, At = {278, 273, 0};
+    //  === Default View Point (frontal) ===
+    const Point Eye = {0, 0.5, -5}, At = {0, 0, 3};
+    const Vector Up = {0, 1, 0};
+
+    // === Up View Point (topo) ===
+    //const Point Eye = {0, 10, 3}, At = {0, 0, 3};
+    //const Vector Up = {0, 0, 1};
+
+    // === Lateral View Point (lado direito, diagonal) ===
+    //const Point Eye = {8, 0.5, -2}, At = {0, 0, 3};
+    //const Vector Up = {0, 1, 0};
+
+    // === Diagonal View Point (frontal + topo) ===
+    // const Point Eye = {3, 3, -3}, At = {0, 0, 3};
     // const Vector Up = {0, 1, 0};
-    // const float fovH = 39.3f;
-    ========================================================================================
-    */
+
+    const float deFocusRad = 0*3.14f/180.f;
+    const float FocusDist = 1.f;
+    const float fovH = 60.f;
+    const float fovHrad = fovH*3.14f/180.f;    // to radians
+    //Perspective *cam = new Perspective(Eye, At, Up, W, H, fovHrad);
+    Perspective *cam = new Perspective(Eye, At, Up, W, H, fovHrad, deFocusRad, FocusDist);
+
+    /* Shader */
+    shd = new DistributedShader(&scene, RGB(0.05,0.05,0.1));
+    int const spp=218;
+
+    //shd = new WhittedShader(&scene, RGB(0.,0.,0.2));
+    //int const spp=1;
+
+
     
+    bool const jitter=true;
+    StandardRenderer myRender (cam, &scene, img, shd, spp, jitter);
+    // render
+    start = clock();
+    
+    myRender.Render();
+    
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+    // save the image
+    mkdir("result", 0777);
+    img->Save("result/reference.ppm");
+    
+    fprintf (stdout, "Rendering time = %.3lf secs\n\n", cpu_time_used);
+    
+    std::cout << "That's all, folks!" << std::endl;
     return 0;
 }
+
+

@@ -1,5 +1,10 @@
 """
-Gera cenas XML para Mitsuba 3 equivalentes às cenas do VI-RT.
+[DESCONTINUADO] Gera cenas XML para Mitsuba 3 equivalentes às cenas do VI-RT.
+
+Substituído pelo exportador C++ (MitsubaExporter.{hpp,cpp}), que escreve os XML
+a partir da MESMA Scene que o VI-RT renderiza — sem drift. Já NÃO é chamado pelo
+render_all.sh; mantido apenas como referência histórica. Podes apagá-lo.
+
 Uso: python3 generate_mitsuba_scenes.py [--scene NOME] [--output-dir DIR]
 """
 
