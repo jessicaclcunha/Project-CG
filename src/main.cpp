@@ -135,7 +135,7 @@ int main(int argc, const char * argv[]) {
     //-- DISNEY -----------------------------------------------------
     //  demo de presets
     //DisneyPresetsScene(scene);          // metal/plástico/tecido/verniz/cera
-    
+
     //  sweeps de parâmetro
     //DisneyRoughnessSweep(scene);        // roughness 0→1 (metal)
     //DisneyMetallicSweep(scene);         // metallic 0→1

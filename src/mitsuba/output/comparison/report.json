@@ -7,9 +7,9 @@
       "mitsuba_png": "../mitsuba/ashikhmin_mitsuba.png",
       "comparison": "ashikhmin_comparison.png",
       "diff": "ashikhmin_diff.png",
-      "rmse": 0.11372101887932276,
-      "psnr": 18.883185158371735,
-      "ssim": 0.6297765970230103
+      "rmse": 0.1137209646791269,
+      "psnr": 18.88318929812564,
+      "ssim": 0.6297838091850281
     },
     {
       "scene": "cook_torrance",
@@ -17,9 +17,9 @@
       "mitsuba_png": "../mitsuba/cook_torrance_mitsuba.png",
       "comparison": "cook_torrance_comparison.png",
       "diff": "cook_torrance_diff.png",
-      "rmse": 0.13323408864024913,
-      "psnr": 17.507692888556292,
-      "ssim": 0.6277973055839539
+      "rmse": 0.13324242756398308,
+      "psnr": 17.507149268635793,
+      "ssim": 0.6278042197227478
     },
     {
       "scene": "disney",
@@ -27,9 +27,9 @@
       "mitsuba_png": "../mitsuba/disney_mitsuba.png",
       "comparison": "disney_comparison.png",
       "diff": "disney_diff.png",
-      "rmse": 0.11983681521809718,
-      "psnr": 18.42819482593379,
-      "ssim": 0.6791307330131531
+      "rmse": 0.11982848311572969,
+      "psnr": 18.42879876586293,
+      "ssim": 0.6791628003120422
     },
     {
       "scene": "oren_nayar",
@@ -37,9 +37,9 @@
       "mitsuba_png": "../mitsuba/oren_nayar_mitsuba.png",
       "comparison": "oren_nayar_comparison.png",
       "diff": "oren_nayar_diff.png",
-      "rmse": 0.06946870253374257,
-      "psnr": 23.164216247271234,
-      "ssim": 0.957151472568512
+      "rmse": 0.06946536406835538,
+      "psnr": 23.164633676093818,
+      "ssim": 0.9571699500083923
     },
     {
       "scene": "phong_spheres",
@@ -47,9 +47,9 @@
       "mitsuba_png": "../mitsuba/phong_spheres_mitsuba.png",
       "comparison": "phong_spheres_comparison.png",
       "diff": "phong_spheres_diff.png",
-      "rmse": 0.06384760199752493,
-      "psnr": 23.897108188465374,
-      "ssim": 0.9717299938201904
+      "rmse": 0.06384540911814883,
+      "psnr": 23.897406515023512,
+      "ssim": 0.9717468619346619
     },
     {
       "scene": "ward",
@@ -57,9 +57,9 @@
       "mitsuba_png": "../mitsuba/ward_mitsuba.png",
       "comparison": "ward_comparison.png",
       "diff": "ward_diff.png",
-      "rmse": 0.10556961436910207,
-      "psnr": 19.52922129717362,
-      "ssim": 0.7575819492340088
+      "rmse": 0.10556982514975753,
+      "psnr": 19.529203954913783,
+      "ssim": 0.7575667500495911
     }
   ]
 }
