@@ -1,27 +1,62 @@
-# renderer
-Initial version of the renderer used in Visualization and Illumnination : Masters in Informatics
+# VI-RT — Estudo de BRDFs
 
-# Execution
+Ray tracer (base de Visualização e Iluminação, Mestrado em Informática) estendido
+para implementar e comparar vários modelos de BRDF.
 
-1. `make` to build the project.
-1. `make run` to compute and display the image (requires a previous `make build`)
-1. `make display` to only display the image (requires a previous `make run`)
+## O que implementámos
 
+- **BRDFs:** Phong (Blinn-Phong normalizado), Cook-Torrance (GGX/Smith/Schlick, fluxo PBR metallic/roughness), Oren-Nayar, Ward (anisotrópico), Ashikhmin-Shirley (anisotrópico) e Disney (principled).
+- **Casos de estudo por BRDF:** para cada modelo criámos variantes que (1) trocam uma função interna por outra igualmente correta (ex.: D Beckmann vs GGX, Fresnel exacto vs Schlick) e (2) alteram/removem algo dado como certo (ex.: sem conservação de energia, sem termo geométrico, Fresnel invertido) — para analisar o impacto de cada escolha.
+- **Cenas de teste:** uma cena base por BRDF e cenas dedicadas a cada caso de estudo (varrimento do parâmetro principal em várias esferas/cubos).
+- **Geometria e câmara:** esferas, triângulos e caixas (cubo triangulado com UV por face); câmara perspetiva com defocus.
+- **Texturas:** mapeamento UV a partir de imagens PPM; a textura afeta **apenas** o difuso (Kd), o especular vem sempre dos parâmetros do material.
+- **Ferramenta RMSE:** comparação quantitativa entre renders (RMSE por canal, MAE, PSNR e SSIM) para medir o quão diferentes são duas BRDFs.
+- **Integração com Mitsuba 3:** exportador C++ que gera a cena Mitsuba a partir da *mesma* `Scene` do renderer, renderiza nos dois motores e compara lado-a-lado (RMSE/PSNR/SSIM + imagens de diferença).
 
-Melhor formas de comparação:
+## Como correr
 
-- Comparação direta Phong vs Cook-Torrance:
-    - [Phong ns=50] [CookTorrance roughness=0.3]  ← materiais equivalentes
-- Variação do parâmetro principal 
-    - Phong: ns = 1, 5, 50, 500
-    - Cook-Torrance: roughness = 1.0, 0.5, 0.2, 0.05
-- Textura + especular
-    - Mostrar que a textura afeta só o difuso — o especular (highlight) mantém-se independente da imagem. Esta é interessante visualmente.
+### 1. Renderer principal
 
-- Phong.hpp — usa Kd (cor fixa RGB):
-    color += Kd * (1.f / M_PI);
-- PhongTexture.hpp — lê o Kd de uma imagem:
-    RGB Kd_tex = Kd * texture.get(x, y);  // pixel da imagem
-    color += Kd_tex * (1.f / M_PI);
-### O especular é exatamente igual nos dois. A única diferença é de onde vem o Kd.
+```bash
+make          # compilar
+make run      # compilar, renderizar e mostrar a imagem
+make display  # apenas mostrar a última imagem renderizada
+make clean    # limpar artefactos de build
+```
 
+A imagem é escrita em `build/apps/result/reference.ppm`.
+
+**Escolher a cena:** abrir [src/main.cpp](src/main.cpp), na secção "CATÁLOGO DE CENAS"
+descomentar **uma** chamada de cena (a ativa é a que está sem `//`). Resolução, SPP,
+shader e câmara configuram-se mais abaixo nesse mesmo ficheiro.
+
+> Correr sempre via `make run` (ou a partir de `build/apps/`): as texturas são
+> carregadas por caminho relativo e os PPM são copiados para `build/apps/`.
+
+### 2. Comparação RMSE
+
+```bash
+cd RMSE && make          # compila rmse_exec
+```
+
+Comparação direta de duas imagens:
+
+```bash
+./RMSE/rmse_exec <variante.ppm> <referencia.ppm> <threshold> <diff_saida.ppm>
+```
+
+Imprime RMSE por canal, MAE, PSNR e SSIM, e escreve a imagem-diferença. O script
+[RMSE/compare.sh](RMSE/compare.sh) `<titulo>` automatiza a comparação do render
+atual (`build/apps/result/reference.ppm`) contra uma referência fixa (`standard.ppm`).
+
+### 3. Comparação com Mitsuba 3
+
+Requisitos: `mitsuba` (Python), `numpy`, `Pillow` e (opcional, para SSIM) `scikit-image`.
+
+```bash
+make mitsuba                      # compila o binário exportador (build/apps/mitsuba_render)
+bash src/mitsuba/render_all.sh    # exporta cenas, renderiza nos 2 motores e compara
+```
+
+Resultados (métricas e imagens lado-a-lado) em `src/mitsuba/output/comparison/`;
+visualização interativa em [src/mitsuba/comparison_viewer.html](src/mitsuba/comparison_viewer.html).

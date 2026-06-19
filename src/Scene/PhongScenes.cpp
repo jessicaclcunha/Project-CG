@@ -67,7 +67,6 @@ void PhongSphereScene (Scene& scene) {
     AmbientLight *ambient = new AmbientLight(RGB(0.05f, 0.05f, 0.05f));
     scene.lights.push_back(ambient);
     scene.numLights++;
-    //PointLight *p1 = new PointLight(RGB(1.f, 1.f, 1.f), Point(0.f, 3.f, 0.f)); -- fica mt escuro
     PointLight *p1 = new PointLight(RGB(300.f, 300.f, 300.f), Point(-1.f, 2.f, 0.f));
     scene.lights.push_back(p1);
     scene.numLights++;
@@ -116,30 +115,11 @@ void PhongCubeScene (Scene& scene) {
 
 void PhongJustOneThing (Scene& scene) {
 
-    /* PLÁSTICO VERMELHO 
-    RGB const Ka(0.05f, 0.05f, 0.05f);
-    RGB const Kd(0.6f,  0.2f,  0.2f);
-    RGB const Ks(0.8f,  0.8f,  0.8f);
-    float const ns = 50.f;
-    */
-    /* METAL POLIDO
-    RGB const Ka(0.05f, 0.05f, 0.05f);
-    RGB const Kd(0.3f,  0.3f,  0.3f);
-    RGB const Ks(0.9f,  0.9f,  0.9f);
-    float const ns = 500.f;
-    */
-    /* BORRACHA
-    RGB const Ka(0.02f, 0.02f, 0.02f);
-    RGB const Kd(0.4f,  0.4f,  0.1f);
-    RGB const Ks(0.1f,  0.1f,  0.1f);
-    float const ns = 5.f;
-    */
-    /* CERÂMICA AZUL*/
+    // material: cerâmica azul
     RGB const Ka(0.05f, 0.05f, 0.08f);
     RGB const Kd(0.1f,  0.2f,  0.6f);
     RGB const Ks(0.7f,  0.7f,  0.7f);
     float const ns = 100.f;
-    
 
     int const app = AddPhongMat(scene, Ka, Kd, Ks, ns);
 

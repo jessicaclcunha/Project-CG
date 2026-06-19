@@ -1,5 +1,5 @@
 //
-//  ThinLens.hpp
+//  Perspective.hpp
 //  VI-RT
 //
 //  Created by Luis Paulo Santos on 10/02/2023.

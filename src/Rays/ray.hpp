@@ -31,7 +31,6 @@ public:
     float propagating_eta;
     Ray () {}
     Ray (Point o, Vector d, RayType t, RGB _throughput): o(o),dir(d), rtype(t), throughput(_throughput) {
-        //invertDir();
     }
     Ray (Point o, Vector d, RayType t): o(o),dir(d), rtype(t) {
         Ray (o, d, t, RGB(1.0, 1.0, 1.0));

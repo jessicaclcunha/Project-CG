@@ -11,11 +11,6 @@
 
 RGB AmbientShader::shade(bool intersected, Intersection isect, int depth) {
     RGB color(0.,0.,0.);
-    
-    /*if (isect.pix_x==320 && isect.pix_y==240) {
-        fprintf (stderr, "AMBIENT SHADER. intersected = %s !\n", (intersected?"TRUE":"FALSE"));
-        fflush(stderr);
-    }*/
 
     // if no intersection, return background
     if (!intersected) {

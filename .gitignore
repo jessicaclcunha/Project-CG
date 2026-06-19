@@ -1,4 +1,13 @@
+# Build artefacts
 build/
+RMSE/build/
+RMSE/rmse_exec
+
+# Generated outputs
 RMSE/*.ppm
+RMSE/outputs/
+result/
+
+# OS cruft
 */.DS_Store
 .DS_Store

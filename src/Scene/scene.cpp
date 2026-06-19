@@ -18,13 +18,8 @@
 
 bool Scene::trace (Ray r, Intersection *isect) {
     Intersection curr_isect;
-    bool intersection = false;    
-    
-    /*if (r.pix_x==320 && r.pix_y==240) {
-        fprintf (stderr, "This is a pixel. There are %d primitives!\n", numPrimitives);
-        fflush(stderr);
-    }*/
-        
+    bool intersection = false;
+
     curr_isect.pix_x = isect->pix_x = r.pix_x;
     curr_isect.pix_y = isect->pix_y = r.pix_y;
 
@@ -32,10 +27,6 @@ bool Scene::trace (Ray r, Intersection *isect) {
     
     // iterate over all primitives
     for (auto prim_itr = prims.begin() ; prim_itr != prims.end() ; prim_itr++) {
-        /* if (r.pix_x==320 && r.pix_y==240) {
-            fprintf (stderr, "Testing intersection\n");
-            fflush(stderr);
-        }*/
         if ((*prim_itr)->g->intersect(r, &curr_isect)) {
             if (!intersection) { // first intersection
                 intersection = true;
@@ -59,14 +50,12 @@ bool Scene::trace (Ray r, Intersection *isect) {
                     intersection = true;
                     *isect = curr_isect;
                     isect->isLight = true;
-                    //isect->Le = RGB(2.,2.,2.);
                     isect->Le = al->L();
                 }
                 else if (curr_isect.depth < isect->depth) {
                     *isect = curr_isect;
                     isect->isLight = true;
                     isect->Le = al->L();
-                    //isect->Le = RGB(2.,2.,2.);
                 }
             }
         }

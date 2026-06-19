@@ -93,7 +93,6 @@ bool ImagePPM::Load (std::string filename) {
     std::ifstream ifs;
      ifs.open(filename, std::ios::binary);
      // need to spec. binary mode for Windows users
-     //Image src;
      try {
          if (ifs.fail()) {
              throw("Can't open input file");

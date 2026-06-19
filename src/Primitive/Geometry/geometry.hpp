@@ -20,10 +20,6 @@ public:
     // return True if r intersects this geometric primitive
     // returns data about intersection on isect
     virtual bool intersect (Ray r, Intersection *isect) {
-        /*if (r.pix_x==320 && r.pix_y==240) {
-            fprintf (stderr, "Testing geometry intersection\n");
-            fflush(stderr);
-        }*/
         return false;
     }
     // geometric primitive bounding box

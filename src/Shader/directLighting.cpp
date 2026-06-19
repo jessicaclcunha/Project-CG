@@ -16,21 +16,13 @@ static RGB direct_AreaLight (AreaLight * l, Scene *scene, Intersection isect, BR
 
 RGB directLighting (Scene *scene, Intersection isect, BRDF *f, std::mt19937& rng, std::uniform_real_distribution<float>U_dist, DIRECT_SAMPLE_MODE mode) {
     RGB color (0.,0.,0.);
-    
-#define XX 725
-#define YY 540
+
     // Loop over scene's light sources
     for (Light* l : scene->lights) {
 
         if (mode==UNIFORM_ONE) {
             int l_ndx = U_dist(rng)*scene->numLights;
-            if (isect.pix_x==XX && isect.pix_y==YY) {
-                fprintf (stderr, "numLights=%d, l_ndx=%d, ", scene->numLights, l_ndx);
-            }
             if (l_ndx >= scene->numLights) l_ndx=scene->numLights-1;
-            if (isect.pix_x==XX && isect.pix_y==YY) {
-                fprintf (stderr, "l_ndx_corrected=%d \n", l_ndx);
-            }
             l = scene->lights[l_ndx];
         }
         
@@ -49,20 +41,13 @@ RGB directLighting (Scene *scene, Intersection isect, BRDF *f, std::mt19937& rng
             r[1] = U_dist(rng);
             color_temp = direct_AreaLight ((AreaLight *)l, scene, isect, f, r);
             color += color_temp;
-            if (isect.pix_x==XX && isect.pix_y==YY) {
-                fprintf (stderr, "ARea light contributes with (%f,%f,%f) \n", color.R, color.G, color.B);
-            }
         } // is AREA_LIGHT
-        
+
         if (mode==UNIFORM_ONE) {
             color = color * scene->numLights;
             break;
         }
     }  // loop over all light sources
-
-    if (isect.pix_x==XX && isect.pix_y==YY) {
-        fprintf (stderr, "Direct contributes with (%f,%f,%f) \n", color.R, color.G, color.B);
-    }
 
     return color;
 }
