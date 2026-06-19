@@ -49,6 +49,20 @@ Imprime RMSE por canal, MAE, PSNR e SSIM, e escreve a imagem-diferença. O scrip
 [RMSE/compare.sh](RMSE/compare.sh) `<titulo>` automatiza a comparação do render
 atual (`build/apps/result/reference.ppm`) contra uma referência fixa (`standard.ppm`).
 
+Fluxo típico de um caso de estudo:
+
+```bash
+make run                                              # render da BRDF standard
+cp build/apps/result/reference.ppm build/apps/result/standard.ppm
+# trocar para a variante em src/main.cpp e make run de novo
+./RMSE/compare.sh <titulo>                            # compara variante vs standard
+```
+
+> Este RMSE (por canal + Y, sobre os PPM) mede **quão diferentes são duas BRDFs nossas**.
+> É uma métrica **distinta** do RMSE da comparação com o Mitsuba (RGB global sobre PNG,
+> que mede correção face a um renderer de referência) — ver
+> [src/mitsuba/README.md](src/mitsuba/README.md). Os dois valores não são comparáveis entre si.
+
 ### 3. Comparação com Mitsuba 3
 
 Requisitos: `mitsuba` (Python), `numpy`, `Pillow` e (opcional, para SSIM) `scikit-image`.

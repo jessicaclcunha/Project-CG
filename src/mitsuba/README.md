@@ -43,6 +43,20 @@ Passos internos (todos para `output/`):
 
 Só compilar o binário (sem pipeline): `make mitsuba` na raiz.
 
+## Sobre as métricas (RMSE / PSNR / SSIM)
+
+Calculadas em [compare_renders.py](compare_renders.py) sobre os **PNG já tone-mapped**
+(8-bit, [0,1]), depois de redimensionar ambos para o mesmo tamanho:
+
+- **RMSE** = `sqrt(mean((vi_rt − mitsuba)²))` sobre **todos os píxeis × 3 canais (RGB)** → **um único número global**.
+- **PSNR** a partir do MSE (max=1.0); **SSIM** via `scikit-image` (3 canais).
+
+> ⚠️ **Não é o mesmo RMSE dos testes de BRDF.** O estudo das BRDFs usa o
+> `rmse_exec` (C++, em [../../RMSE/](../../RMSE/)), que dá RMSE **por canal + luminância Y**
+> sobre os **PPM** (float). Aqui o RMSE é **RGB global** sobre PNG, e mede **"quão
+> perto o VI-RT está do Mitsuba"** (validação), enquanto o do estudo mede **"quão
+> diferentes são duas BRDFs nossas"**. Os dois valores **não são comparáveis** entre si.
+
 ## Limites da validação (importante)
 
 A geometria/luz/câmara são exactas; o que varia é o **modelo de BRDF** do outro lado:

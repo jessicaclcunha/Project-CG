@@ -50,21 +50,27 @@ int main(int argc, const char * argv[]) {
     //  cenas base
     //CookTorranceSphereScene(scene);
     //CookTorranceShowcase(scene);
+
     //  scene de controlo
     //CookTorranceTestStandart(scene);    // standard
+
     //  energy conservation
     //CookTorranceNoECTest2(scene);       // sem EC
+
     //  alternativas de F "erradas"
     //CookTorranceFConstTest(scene);      // Fresnel constante (F=F0)
     //CookTorranceFExpTest(scene);        // Fresnel expoente 20
     //CookTorranceFInvTest(scene);        // Fresnel invertido
+
     //  alternativas de kd "erradas"
     //CookTorranceKDMetalTest(scene);     // kD = metallic (papel invertido)
     //CookTorranceKDLerpTest(scene);      // kD fixo 0.5/0.5
+
     //  alternativas de G "erradas"
     //CookTorranceGNoneTest(scene);       // G = 1 (sem shadowing-masking)
     //CookTorranceGOneTest(scene);        // G = G1L apenas
     //CookTorranceGKelemenTest(scene);    // G Kelemen: F*D / (4*VdotH^2)
+
     //  alternativas correctas de D, F, G
     //CookTorranceDBeckmannTest(scene);   // D Beckmann (original CT 1982): cauda mais curta que GGX
     //CookTorranceDBlinnPhongTest(scene); // D Blinn-Phong NDF: cauda mínima, highlight abrupto
@@ -76,13 +82,16 @@ int main(int argc, const char * argv[]) {
     //-- OREN-NAYAR -------------------------------------------------
     //  cena base (demo)
     //OrenNayarLambertVsON(scene);        // contraste Lambert vs ON — luz de farol
+
     //  scene de controlo
     //OrenNayarTestStandart(scene);       // standard (ON simplificado)
+
     //  variantes "erradas"
     //OrenNayarLambertTest(scene);        // Lambert puro (sigma=0): tudo o que o ON acrescenta
     //OrenNayarNoBTest(scene);            // sem termo B (sem retroreflexão)
     //OrenNayarAFixoTest(scene);          // A=1 fixo (sem escurecimento)
     //OrenNayarNoClampTest(scene);        // sem clamp do azimute (cosΔφ negativo)
+
     //  alternativas correctas
     //OrenNayarFujiiTest(scene);          // Fujii energy-preserving (quase igual ao standard)
     //OrenNayarFullTest(scene);           // ON completo 1994 (C1/C2/C3)
@@ -91,11 +100,13 @@ int main(int argc, const char * argv[]) {
     //-- WARD -------------------------------------------------------
     //  setup do estudo
     //WardTestStandart(scene);            // standard (4 esferas: iso liso/rugoso + aniso/aniso forte)
+
     //  variantes "erradas"
     //WardIsoForcedTest(scene);           // força αx=αy (mata a anisotropia)
     //WardNoNormTest(scene);              // sem normalização 1/(4π·αx·αy)
     //WardNoDiffTest(scene);              // sem difuso Kd/π (especular puro)
     //WardNoGeomTest(scene);              // sem atenuação geométrica √(NdotL·NdotV)
+
     //  alternativas correctas
     //WardDurTest(scene);                 // Dür 2006: denom linear (NdotL·NdotV)
     //WardGMDTest(scene);                 // Geisler-Moroder & Dür 2010: denom (NdotH)^4
@@ -106,14 +117,17 @@ int main(int argc, const char * argv[]) {
     //AshikhminShirleyScene(scene);
     //AshikhminShirleyAnisotropicScene(scene);
     //AshikhminShirleyMaterialsScene(scene);
+
     //  setup do estudo
     //AshikhminShirleyTestStandart(scene);  // referência
+
     //  exploração de variantes
     //AshikhminShirleyFConstTest(scene);    // Fresnel constante
     //AshikhminShirleyFInvTest(scene);      // Fresnel invertido
     //AshikhminShirleyNoNormTest(scene);    // sem normalização do lóbulo
     //AshikhminShirleyLambDiffTest(scene);  // difuso Lambertiano (sem CE)
     //AshikhminShirleyNoDiffTest(scene);    // especular puro (sem difuso)
+
     //  alternativas correctas
     //AshikhminShirleyFExactTest(scene);    // Fresnel dieléctrico exacto
     //AshikhminShirleyFSGTest(scene);       // Fresnel spherical-gaussian
@@ -121,6 +135,7 @@ int main(int argc, const char * argv[]) {
     //-- DISNEY -----------------------------------------------------
     //  demo de presets
     //DisneyPresetsScene(scene);          // metal/plástico/tecido/verniz/cera
+    
     //  sweeps de parâmetro
     //DisneyRoughnessSweep(scene);        // roughness 0→1 (metal)
     //DisneyMetallicSweep(scene);         // metallic 0→1
@@ -131,7 +146,7 @@ int main(int argc, const char * argv[]) {
 
     //-- TEXTURAS ---------------------------------------------------
     //TextureAllBRDFsSpheres(scene);      // 4 esferas (Phong/Cook-Torrance/Oren-Nayar/Ward) com Dog.ppm
-    TextureAllBRDFsBoxes(scene);          // <-- CENA ATIVA: 4 cubos com UV per-face (UMinho.ppm)
+    //TextureAllBRDFsBoxes(scene);          // <-- CENA ATIVA: 4 cubos com UV per-face (UMinho.ppm)
     //                                       NOTA: usar FOV=80° ou Eye=(0,0.5,-8) para ver tudo
     //TextureUVDebug(scene);              // validação do UV mapping: esfera (UV esférico) + cubo (UV per-face)
     //CookTorranceTextureStandart(scene);
