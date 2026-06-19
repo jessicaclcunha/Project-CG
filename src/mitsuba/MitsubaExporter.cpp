@@ -73,24 +73,18 @@ static std::string emitBSDF(BRDF* b, const std::string& id) {
           << "    </bsdf>\n";
         return o.str();
     }
-    // CookTorrance -> roughconductor (metal) ou roughplastic (dieléctrico)
+    // CookTorrance -> principled: mesmo fluxo PBR que a nossa CookTorrance
+    // (base_color=Kd, metallic, roughness; F0=0.04 lerp baseColor por metallic,
+    // specular=0.5 → F0_dieléctrico=0.04). Respeita a cor real do metal — sem
+    // ouro forçado nem base difusa espúria.
     if (CookTorrance* c = dynamic_cast<CookTorrance*>(b)) {
-        float alpha = c->roughness > 0.01f ? c->roughness : 0.01f;
-        if (c->metallic > 0.5f) {
-            o << "    <bsdf type=\"roughconductor\" id=\"" << id << "\">\n"
-              << "        <rgb name=\"specular_reflectance\" value=\"" << rgb(c->Kd) << "\"/>\n"
-              << "        <float name=\"alpha\" value=\"" << f1(alpha) << "\"/>\n"
-              << "        <string name=\"distribution\" value=\"ggx\"/>\n"
-              << "        <string name=\"material\" value=\"Au\"/>\n"
-              << "    </bsdf>\n";
-        } else {
-            o << "    <bsdf type=\"roughplastic\" id=\"" << id << "\">\n"
-              << "        <rgb name=\"diffuse_reflectance\" value=\"" << rgb(c->Kd) << "\"/>\n"
-              << "        <float name=\"alpha\" value=\"" << f1(alpha) << "\"/>\n"
-              << "        <string name=\"distribution\" value=\"ggx\"/>\n"
-              << "        <float name=\"int_ior\" value=\"1.5\"/>\n"
-              << "    </bsdf>\n";
-        }
+        float rough = c->roughness > 0.01f ? c->roughness : 0.01f;
+        o << "    <bsdf type=\"principled\" id=\"" << id << "\">\n"
+          << "        <rgb name=\"base_color\" value=\"" << rgb(c->Kd) << "\"/>\n"
+          << "        <float name=\"roughness\" value=\"" << f1(rough) << "\"/>\n"
+          << "        <float name=\"metallic\" value=\"" << f1(c->metallic) << "\"/>\n"
+          << "        <float name=\"specular\" value=\"0.5\"/>\n"
+          << "    </bsdf>\n";
         return o.str();
     }
     // Ward -> roughconductor anisotrópico (αx/αy → alpha_u/alpha_v)
@@ -190,6 +184,11 @@ void ExportMitsubaScene(const Scene& scene, const MiCamera& cam, const std::stri
                 << "        <point name=\"position\" x=\"" << f1(pl->pos.X) << "\" y=\"" << f1(pl->pos.Y) << "\" z=\"" << f1(pl->pos.Z) << "\"/>\n"
                 << "    </emitter>\n";
         } else if (l->type == AMBIENT_LIGHT) {
+            // A ambiente vira um emitter "constant": no Mitsuba ele serve sobretudo
+            // de FUNDO (a cor onde os raios falham), que ocupa a maior parte da
+            // imagem e tem de bater com o background do VI-RT. (Como efeito lateral
+            // ilumina ligeiramente as superfícies — nos metais nota-se mais — mas
+            // removê-lo enegrece o fundo e piora muito a comparação global.)
             AmbientLight* al = static_cast<AmbientLight*>(l);
             xml << "    <emitter type=\"constant\">\n"
                 << "        <rgb name=\"radiance\" value=\"" << rgb(al->L()) << "\"/>\n"

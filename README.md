@@ -119,11 +119,20 @@ A geometria/luz/câmara são exactas; o que varia é o **modelo de BRDF** do out
 
 | BRDF VI-RT | BSDF Mitsuba | Validação |
 |---|---|---|
-| Difuso, Cook-Torrance, Disney | `diffuse` / `roughconductor`·`roughplastic` / `principled` | ✅ significativa |
+| Oren-Nayar (difuso) | `diffuse` | ✅ significativa |
+| Cook-Torrance, Disney | `principled` (mesmo fluxo PBR) | ✅ significativa |
 | Ward, Ashikhmin-Shirley, Phong | aproximação (Mitsuba não tem estes modelos) | ⚠️ qualitativa |
 
 Para Ward/Ashikhmin-Shirley/Phong a diferença **não** é necessariamente um bug — são
 modelos distintos. O integrador (Mitsuba `direct` ≈ `DistributedShader`) e o tone map
 são alinhados ao máximo, mas nunca serão bit-a-bit iguais (são renderers diferentes).
+
+**Luz ambiente / fundo.** A `AmbientLight` do VI-RT (termo `Ka·L`, desprezável) é
+exportada como `emitter type="constant"`, que no Mitsuba serve sobretudo de **fundo**
+(a cor onde os raios falham, que ocupa a maior parte da imagem). Como efeito lateral
+ilumina ligeiramente as superfícies — nos **metais** nota-se mais, porque um metal
+reflete esse ambiente em toda a área e aparece mais claro que no VI-RT. Tentar removê-lo
+para igualar os metais **piora** a comparação global (o fundo fica preto), por isso
+mantém-se. É uma nuance dos renderers, não um bug.
 
 **Dependências:** `mitsuba` (Python), `numpy`, `Pillow`; `scikit-image` para o SSIM.
